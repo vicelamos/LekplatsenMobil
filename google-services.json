@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "802816415281",
+    "project_id": "lekplatsen-907fb",
+    "storage_bucket": "lekplatsen-907fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:802816415281:android:28c1d4c4a26a86b7d46710",
+        "android_client_info": {
+          "package_name": "com.viktorandre.LekplatsenMobil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXtUBBzyepy1v1fqrnBxOC4txdSq5HNQM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
