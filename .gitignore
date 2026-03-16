@@ -37,6 +37,7 @@ yarn-error.*
 # Firebase config files (sensitive)
 google-services.json
 GoogleService-Info.plist
+serviceAccountKey.json
 
 # typescript
 *.tsbuildinfo
