@@ -20,6 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { File } from 'expo-file-system';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
+import { compressImage, getReadableFileSize } from '../utils/imageCompression';
 
 import { auth, db, storage } from '../firebase';
 import {
@@ -282,9 +283,16 @@ export default function AddPlaygroundScreen({ route, navigation }) {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      quality: 0.9,
+      quality: 1.0, // Vi komprimerar manuellt nedan
     });
-    if (!res.canceled) setLocalImage(res.assets[0].uri);
+    if (!res.canceled) {
+      const compressedUri = await compressImage(res.assets[0].uri, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.75,
+      });
+      setLocalImage(compressedUri);
+    }
   };
 
   const takePhoto = async () => {
@@ -295,9 +303,16 @@ export default function AddPlaygroundScreen({ route, navigation }) {
     }
     const res = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
-      quality: 0.9,
+      quality: 1.0, // Vi komprimerar manuellt nedan
     });
-    if (!res.canceled) setLocalImage(res.assets[0].uri);
+    if (!res.canceled) {
+      const compressedUri = await compressImage(res.assets[0].uri, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.75,
+      });
+      setLocalImage(compressedUri);
+    }
   };
 
   const uploadImageIfAny = async (docId) => {
@@ -307,7 +322,8 @@ export default function AddPlaygroundScreen({ route, navigation }) {
       setUploading(true);
       const file = new File(localImage);
       const base64Data = await file.base64();
-      console.log('AddPlaygroundScreen: base64 length', base64Data.length);
+      const fileSize = getReadableFileSize(base64Data);
+      console.log('AddPlaygroundScreen: Laddar upp bild', { size: fileSize, length: base64Data.length });
       const ext = 'jpg';
       const path = `images/playgrounds/${docId}/${Date.now()}.${ext}`;
       const storageRef = ref(storage, path);

@@ -228,8 +228,9 @@ const customMapStyle = [
 ];
 
 /* ------------------------- Filter & Sorteringsmodal ------------------------- */
-const FilterSortModal = memo(({ visible, onClose, sortBy, setSortBy, minRating, setMinRating }) => {
+const FilterSortModal = memo(({ visible, onClose, sortBy, setSortBy, minRating, setMinRating, selectedKommun, setSelectedKommun, kommuner }) => {
   const { theme } = useTheme();
+  const [expandedSection, setExpandedSection] = useState(null); // 'sort', 'rating', 'kommun'
   
   console.log('FilterSortModal render, visible:', visible);
   
@@ -246,6 +247,10 @@ const FilterSortModal = memo(({ visible, onClose, sortBy, setSortBy, minRating, 
     { value: 4, label: '4+ stjärnor' },
     { value: 4.5, label: '4.5+ stjärnor' },
   ];
+
+  const toggleSection = (section) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
 
   if (!visible) return null;
 
@@ -273,72 +278,194 @@ const FilterSortModal = memo(({ visible, onClose, sortBy, setSortBy, minRating, 
           <ScrollView style={styles.modalBody}>
             {/* Sortering */}
             <View style={styles.modalSection}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                <Ionicons name="swap-vertical" size={18} color={theme.colors.text} /> Sortera efter
-              </Text>
-              {sortOptions.map(option => (
-                <TouchableOpacity
-                  key={option.value}
-                  onPress={() => setSortBy(option.value)}
-                  style={[
-                    styles.optionButton,
-                    { 
-                      backgroundColor: sortBy === option.value ? theme.colors.primary : theme.colors.bgSoft,
-                      borderColor: sortBy === option.value ? theme.colors.primary : theme.colors.border,
-                    }
-                  ]}
-                >
-                  <Ionicons 
-                    name={option.icon} 
-                    size={20} 
-                    color={sortBy === option.value ? theme.colors.primaryTextOn : theme.colors.textMuted} 
-                  />
-                  <Text style={[
-                    styles.optionText,
-                    { color: sortBy === option.value ? theme.colors.primaryTextOn : theme.colors.text }
-                  ]}>
-                    {option.label}
+              <TouchableOpacity 
+                onPress={() => toggleSection('sort')}
+                style={[styles.sectionHeader, { borderBottomColor: theme.colors.border }]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons name="swap-vertical" size={20} color={theme.colors.text} style={{ marginRight: 8 }} />
+                  <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                    Sortera efter
                   </Text>
-                  {sortBy === option.value && (
-                    <Ionicons name="checkmark-circle" size={20} color={theme.colors.primaryTextOn} />
+                  {sortBy !== 'none' && (
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.primary, marginLeft: 8 }} />
                   )}
-                </TouchableOpacity>
-              ))}
+                </View>
+                <Ionicons 
+                  name={expandedSection === 'sort' ? 'chevron-up' : 'chevron-down'} 
+                  size={24} 
+                  color={theme.colors.textMuted} 
+                />
+              </TouchableOpacity>
+              {expandedSection === 'sort' && (
+                <View style={{ paddingTop: 8 }}>
+                  {sortOptions.map(option => (
+                    <TouchableOpacity
+                      key={option.value}
+                      onPress={() => setSortBy(option.value)}
+                      style={[
+                        styles.optionButton,
+                        { 
+                          backgroundColor: sortBy === option.value ? theme.colors.primary : theme.colors.bgSoft,
+                          borderColor: sortBy === option.value ? theme.colors.primary : theme.colors.border,
+                        }
+                      ]}
+                    >
+                      <Ionicons 
+                        name={option.icon} 
+                        size={20} 
+                        color={sortBy === option.value ? theme.colors.primaryTextOn : theme.colors.textMuted} 
+                      />
+                      <Text style={[
+                        styles.optionText,
+                        { color: sortBy === option.value ? theme.colors.primaryTextOn : theme.colors.text }
+                      ]}>
+                        {option.label}
+                      </Text>
+                      {sortBy === option.value && (
+                        <Ionicons name="checkmark-circle" size={20} color={theme.colors.primaryTextOn} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
 
             {/* Filtrera efter betyg */}
             <View style={styles.modalSection}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                <Ionicons name="star" size={18} color={theme.colors.star} /> Filtrera betyg
-              </Text>
-              {ratingOptions.map(option => (
-                <TouchableOpacity
-                  key={option.value}
-                  onPress={() => setMinRating(option.value)}
-                  style={[
-                    styles.optionButton,
-                    { 
-                      backgroundColor: minRating === option.value ? theme.colors.primary : theme.colors.bgSoft,
-                      borderColor: minRating === option.value ? theme.colors.primary : theme.colors.border,
-                    }
-                  ]}
-                >
-                  <Ionicons 
-                    name="star" 
-                    size={20} 
-                    color={minRating === option.value ? theme.colors.primaryTextOn : theme.colors.star} 
-                  />
-                  <Text style={[
-                    styles.optionText,
-                    { color: minRating === option.value ? theme.colors.primaryTextOn : theme.colors.text }
-                  ]}>
-                    {option.label}
+              <TouchableOpacity 
+                onPress={() => toggleSection('rating')}
+                style={[styles.sectionHeader, { borderBottomColor: theme.colors.border }]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons name="star" size={20} color={theme.colors.star} style={{ marginRight: 8 }} />
+                  <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                    Filtrera betyg
                   </Text>
-                  {minRating === option.value && (
-                    <Ionicons name="checkmark-circle" size={20} color={theme.colors.primaryTextOn} />
+                  {minRating > 0 && (
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.primary, marginLeft: 8 }} />
                   )}
-                </TouchableOpacity>
-              ))}
+                </View>
+                <Ionicons 
+                  name={expandedSection === 'rating' ? 'chevron-up' : 'chevron-down'} 
+                  size={24} 
+                  color={theme.colors.textMuted} 
+                />
+              </TouchableOpacity>
+              {expandedSection === 'rating' && (
+                <View style={{ paddingTop: 8 }}>
+                  {ratingOptions.map(option => (
+                    <TouchableOpacity
+                      key={option.value}
+                      onPress={() => setMinRating(option.value)}
+                      style={[
+                        styles.optionButton,
+                        { 
+                          backgroundColor: minRating === option.value ? theme.colors.primary : theme.colors.bgSoft,
+                          borderColor: minRating === option.value ? theme.colors.primary : theme.colors.border,
+                        }
+                      ]}
+                    >
+                      <Ionicons 
+                        name="star" 
+                        size={20} 
+                        color={minRating === option.value ? theme.colors.primaryTextOn : theme.colors.star} 
+                      />
+                      <Text style={[
+                        styles.optionText,
+                        { color: minRating === option.value ? theme.colors.primaryTextOn : theme.colors.text }
+                      ]}>
+                        {option.label}
+                      </Text>
+                      {minRating === option.value && (
+                        <Ionicons name="checkmark-circle" size={20} color={theme.colors.primaryTextOn} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            {/* Filtrera efter kommun */}
+            <View style={styles.modalSection}>
+              <TouchableOpacity 
+                onPress={() => toggleSection('kommun')}
+                style={[styles.sectionHeader, { borderBottomColor: theme.colors.border }]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons name="location" size={20} color={theme.colors.primary} style={{ marginRight: 8 }} />
+                  <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                    Filtrera kommun
+                  </Text>
+                  {selectedKommun && (
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.primary, marginLeft: 8 }} />
+                  )}
+                </View>
+                <Ionicons 
+                  name={expandedSection === 'kommun' ? 'chevron-up' : 'chevron-down'} 
+                  size={24} 
+                  color={theme.colors.textMuted} 
+                />
+              </TouchableOpacity>
+              {expandedSection === 'kommun' && (
+                <View style={{ paddingTop: 8 }}>
+                  <TouchableOpacity
+                    onPress={() => setSelectedKommun(null)}
+                    style={[
+                      styles.optionButton,
+                      { 
+                        backgroundColor: !selectedKommun ? theme.colors.primary : theme.colors.bgSoft,
+                        borderColor: !selectedKommun ? theme.colors.primary : theme.colors.border,
+                      }
+                    ]}
+                  >
+                    <Ionicons 
+                      name="globe" 
+                      size={20} 
+                      color={!selectedKommun ? theme.colors.primaryTextOn : theme.colors.textMuted} 
+                    />
+                    <Text style={[
+                      styles.optionText,
+                      { color: !selectedKommun ? theme.colors.primaryTextOn : theme.colors.text }
+                    ]}>
+                      Alla kommuner
+                    </Text>
+                    {!selectedKommun && (
+                      <Ionicons name="checkmark-circle" size={20} color={theme.colors.primaryTextOn} />
+                    )}
+                  </TouchableOpacity>
+                  <ScrollView style={{ maxHeight: 200 }}>
+                    {kommuner.map(kommun => (
+                      <TouchableOpacity
+                        key={kommun}
+                        onPress={() => setSelectedKommun(kommun)}
+                        style={[
+                          styles.optionButton,
+                          { 
+                            backgroundColor: selectedKommun === kommun ? theme.colors.primary : theme.colors.bgSoft,
+                            borderColor: selectedKommun === kommun ? theme.colors.primary : theme.colors.border,
+                          }
+                        ]}
+                      >
+                        <Ionicons 
+                          name="location-outline" 
+                          size={20} 
+                          color={selectedKommun === kommun ? theme.colors.primaryTextOn : theme.colors.textMuted} 
+                        />
+                        <Text style={[
+                          styles.optionText,
+                          { color: selectedKommun === kommun ? theme.colors.primaryTextOn : theme.colors.text }
+                        ]}>
+                          {kommun}
+                        </Text>
+                        {selectedKommun === kommun && (
+                          <Ionicons name="checkmark-circle" size={20} color={theme.colors.primaryTextOn} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
             </View>
 
             {/* Rensa alla filter */}
@@ -346,6 +473,7 @@ const FilterSortModal = memo(({ visible, onClose, sortBy, setSortBy, minRating, 
               onPress={() => {
                 setSortBy('none');
                 setMinRating(0);
+                setSelectedKommun(null);
               }}
               style={[styles.resetButton, { backgroundColor: theme.colors.bgSoft, borderColor: theme.colors.border }]}
             >
@@ -385,9 +513,19 @@ function SearchScreen() {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [sortBy, setSortBy] = useState('none'); // 'none', 'rating', 'distance', 'name'
   const [minRating, setMinRating] = useState(0);
+  const [selectedKommun, setSelectedKommun] = useState(null);
 
   const userId = auth.currentUser?.uid;
   const mapRef = useRef(null);
+
+  // Hämta unika kommuner från alla lekplatser
+  const kommuner = useMemo(() => {
+    const uniqueKommuner = [...new Set(allPlaygrounds
+      .map(p => p.kommun)
+      .filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'sv'));
+    return uniqueKommuner;
+  }, [allPlaygrounds]);
 
   // Hämta användarens position
   useEffect(() => {
@@ -408,12 +546,12 @@ function SearchScreen() {
   }, []);
 
   useEffect(() => {
-    if (userLocation && mapRef.current) {
+    if (userLocation && mapRef.current && viewMode === 'map') {
       mapRef.current.animateToRegion(
         {
           ...userLocation,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
         },
         1000,
       );
@@ -470,6 +608,11 @@ function SearchScreen() {
       list = list.filter(p => (p.snittbetyg || 0) >= minRating);
     }
     
+    // Kommunfilter
+    if (selectedKommun) {
+      list = list.filter(p => p.kommun === selectedKommun);
+    }
+    
     // Sortering
     if (sortBy === 'rating') {
       list = list.sort((a, b) => (b.snittbetyg || 0) - (a.snittbetyg || 0));
@@ -488,11 +631,29 @@ function SearchScreen() {
     }
     
     return list;
-  }, [searchQuery, allPlaygrounds, showFavoritesOnly, favoriteIds, sortBy, minRating, userLocation]);
+  }, [searchQuery, allPlaygrounds, showFavoritesOnly, favoriteIds, sortBy, minRating, userLocation, selectedKommun]);
+
+  // Zooma till kommun när den väljs och kartvyn är aktiv
+  useEffect(() => {
+    if (selectedKommun && viewMode === 'map' && mapRef.current && filtered.length > 0) {
+      const firstInKommun = filtered[0];
+      const pos = parsePosition(firstInKommun.position);
+      if (pos) {
+        mapRef.current.animateToRegion(
+          {
+            ...pos,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          },
+          1000,
+        );
+      }
+    }
+  }, [selectedKommun, viewMode, filtered]);
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" /></View>;
 
-  const hasActiveFilters = sortBy !== 'none' || minRating > 0;
+  const hasActiveFilters = sortBy !== 'none' || minRating > 0 || selectedKommun !== null;
   
   console.log('Filter modal visible:', filterModalVisible);
 
@@ -518,6 +679,9 @@ function SearchScreen() {
         setSortBy={setSortBy}
         minRating={minRating}
         setMinRating={setMinRating}
+        selectedKommun={selectedKommun}
+        setSelectedKommun={setSelectedKommun}
+        kommuner={kommuner}
       />
       
       {viewMode === 'list' ? (
@@ -542,7 +706,10 @@ function SearchScreen() {
             ref={mapRef}
             style={[styles.mapContainer, mapStyle.containerStyle]}
             customMapStyle={mapStyle.customMapStyle}
-            initialRegion={{ latitude: 57.72, longitude: 12.94, latitudeDelta: 0.1, longitudeDelta: 0.1 }}
+            initialRegion={userLocation 
+              ? { ...userLocation, latitudeDelta: 0.02, longitudeDelta: 0.02 }
+              : { latitude: 57.72, longitude: 12.94, latitudeDelta: 0.05, longitudeDelta: 0.05 }
+            }
             showsUserLocation={true}
             showsMyLocationButton={true}
           >
@@ -702,10 +869,18 @@ const styles = StyleSheet.create({
   modalSection: {
     marginBottom: 24,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    marginBottom: 0,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 12,
   },
   optionButton: {
     flexDirection: 'row',

@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { File as ExpoFile } from 'expo-file-system';
 import { auth, db, storage } from '../firebase';
+import { compressImage, getReadableFileSize } from '../utils/imageCompression';
 import {
   doc,
   getDoc,
@@ -233,9 +234,16 @@ export default function CheckInScreen({ route, navigation }) {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      quality: 0.9,
+      quality: 1.0, // Vi komprimerar manuellt nedan
     });
-    if (!res.canceled) setImageUri(res.assets[0].uri);
+    if (!res.canceled) {
+      const compressedUri = await compressImage(res.assets[0].uri, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.75,
+      });
+      setImageUri(compressedUri);
+    }
   };
 
   const takePhoto = async () => {
@@ -246,9 +254,16 @@ export default function CheckInScreen({ route, navigation }) {
     }
     const res = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
-      quality: 0.85,
+      quality: 1.0, // Vi komprimerar manuellt nedan
     });
-    if (!res.canceled) setImageUri(res.assets[0].uri);
+    if (!res.canceled) {
+      const compressedUri = await compressImage(res.assets[0].uri, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.75,
+      });
+      setImageUri(compressedUri);
+    }
   };
 
   const uploadImageIfAny = async (checkInDocId) => {
@@ -258,7 +273,8 @@ export default function CheckInScreen({ route, navigation }) {
       setUploading(true);
       const file = new ExpoFile(imageUri);
       const base64Data = await file.base64();
-      console.log('CheckInScreen: base64 length', base64Data.length);
+      const fileSize = getReadableFileSize(base64Data);
+      console.log('CheckInScreen: Laddar upp bild', { size: fileSize, length: base64Data.length });
       const ext = 'jpg';
       const path = `images/checkins/${checkInDocId}/${Date.now()}.${ext}`;
       const storageRef = ref(storage, path);

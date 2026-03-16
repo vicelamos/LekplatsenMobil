@@ -27,7 +27,7 @@ export const typography = {
 
 // 🗺️ Kartstil och styling
 export const mapStyle = {
-  // Custom Google Maps stil
+  // Custom Google Maps stil - tom för standardfärger
   customMapStyle: [
     {
       "featureType": "poi",
@@ -42,21 +42,6 @@ export const mapStyle = {
       "featureType": "transit",
       "elementType": "labels.icon",
       "stylers": [{ "visibility": "off" }]
-    },
-    {
-      "featureType": "water",
-      "elementType": "geometry",
-      "stylers": [{ "color": "#a2daf7" }]
-    },
-    {
-      "featureType": "landscape.natural",
-      "elementType": "geometry.fill",
-      "stylers": [{ "color": "#e8f5e9" }]
-    },
-    {
-      "featureType": "road",
-      "elementType": "geometry.stroke",
-      "stylers": [{ "color": "#ffffff" }]
     }
   ],
   // Styling för kartcontainrar
