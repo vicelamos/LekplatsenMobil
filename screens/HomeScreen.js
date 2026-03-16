@@ -1,16 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  SafeAreaView,
   FlatList,
   Image,
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
-  Alert
+  ImageBackground,
+  Alert,
+  Platform,
+  StyleSheet,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+
+// 🟢 Importera gemensamma komponenter och services
+import { CheckInCard } from '../src/components/CheckInCard';
+import { enrichFeed } from '../src/services/feedService'; // <-- NYTT
+
 import { auth, db } from '../firebase';
 import {
   doc,
@@ -21,587 +31,395 @@ import {
   where,
   orderBy,
   limit,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-  startAfter // <-- NY IMPORT FÖR INFINITE SCROLL
+  startAfter,
 } from 'firebase/firestore';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 
-// --- Komponent för "Upptäck nya lekplatser" ---
-const DiscoverCard = React.memo(({ item }) => {
+// Tema & UI
+import { useTheme } from '../src/theme';
+import { Card, Chip } from '../src/ui';
+import { parsePosition, calculateDistance, formatDistance } from '../utils/geo';
+
+/* -------------------------------------------------------------------------- */
+/* Hjälpfunktioner                                                            */
+/* -------------------------------------------------------------------------- */
+
+const toPlaygroundPayload = (src = {}, fallbackId) => {
+  let location = null;
+  if (src?.location?.latitude && src?.location?.longitude) {
+    location = { latitude: src.location.latitude, longitude: src.location.longitude };
+  } else if (typeof src?.latitude === 'number' && typeof src?.longitude === 'number') {
+    location = { latitude: src.latitude, longitude: src.longitude };
+  } else if (src?.koordinater?.lat && src?.koordinater?.lng) {
+    location = { latitude: src.koordinater.lat, longitude: src.koordinater.lng };
+  }
+
+  return {
+    id: src.id || fallbackId,
+    name: src.namn || src.name || 'Lekplats',
+    address: src.adress || src.address || '',
+    description: src.beskrivning || src.description || '',
+    imageUrl: src.bildUrl || src.imageUrl || '',
+    equipment: src.utrustning || src.equipment || [],
+    location,
+  };
+};
+
+const navigateToPlaygroundDetails = (navigation, params) => {
+  const parent = navigation.getParent?.();
+  (parent || navigation).navigate('PlaygroundDetails', params);
+};
+
+const chunk = (arr, size) => {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+};
+
+/* -------------------------------------------------------------------------- */
+/* Komponent: Lekplatser nära dig (Karusell högst upp)                      */
+/* -------------------------------------------------------------------------- */
+
+const DiscoverCard = memo(({ item, userLocation }) => {
   const navigation = useNavigation();
-  const imageUrl = item.bildUrl || 'https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f';
+  const { theme } = useTheme();
+  const imageUrl =
+    item.bildUrl ||
+    item.imageUrl ||
+    'https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f';
+
+  const distance = useMemo(() => {
+    if (!userLocation || !item.position) return null;
+    const playgroundPos = parsePosition(item.position);
+    if (!playgroundPos) return null;
+    const dist = calculateDistance(userLocation, playgroundPos);
+    return formatDistance(dist);
+  }, [userLocation, item.position]);
+
+  const onPress = () => {
+    const payload = toPlaygroundPayload({ ...item, bildUrl: imageUrl }, item.id);
+    navigateToPlaygroundDetails(navigation, { playground: payload, id: payload.id });
+  };
 
   return (
-    <TouchableOpacity 
-      style={styles.discoverCard} 
-      onPress={() => navigation.navigate('Sök', { playgroundId: item.id })}
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={onPress}
+      style={{
+        width: 260,
+        height: 160,
+        marginRight: theme.space.md,
+        borderRadius: theme.radius.xl,
+        overflow: 'hidden',
+        ...theme.shadow.card,
+      }}
     >
-      <Image source={{ uri: imageUrl }} style={styles.discoverImage} />
-      <View style={styles.discoverOverlay} />
-      <Text style={styles.discoverTitle}>{item.namn}</Text>
-      <Text style={styles.discoverSubtitle}>{item.adress}</Text>
-      <View style={styles.discoverRating}>
-        <Ionicons name="star" size={16} color="#FFD700" />
-        <Text style={styles.discoverRatingText}>{(item.snittbetyg || 0).toFixed(1)}</Text>
-      </View>
+      <ImageBackground source={{ uri: imageUrl }} style={{ flex: 1 }}>
+        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)' }} />
+        <View style={styles.discoverBadge}>
+          <Ionicons name="star" size={14} color={theme.colors.star} />
+          <Text style={styles.discoverBadgeText}>
+            {(item.snittbetyg || 0).toFixed(1)}
+          </Text>
+        </View>
+        {distance && (
+          <View style={[styles.distanceBadge, { backgroundColor: theme.colors.success }]}>
+            <Ionicons name="navigate" size={12} color="#fff" />
+            <Text style={styles.distanceBadgeText}>{distance}</Text>
+          </View>
+        )}
+        <View style={{ position: 'absolute', left: 14, bottom: 14, right: 14 }}>
+          <Text style={{ color: '#fff', fontWeight: '800', fontSize: 18 }} numberOfLines={1}>
+            {item.namn || 'Lekplats'}
+          </Text>
+          {!!item.adress && (
+            <Text style={{ color: '#fff', opacity: 0.85 }} numberOfLines={1}>
+              {item.adress}
+            </Text>
+          )}
+        </View>
+      </ImageBackground>
     </TouchableOpacity>
   );
 });
 
-// --- Hjälpfunktion för att visa taggar ---
-const renderTagSection = (title, data, iconName) => {
-  if (!data || data.length === 0) return null;
-  return (
-    <View style={styles.tagSection}>
-      <Text style={styles.tagTitle}>
-        <Ionicons name={iconName} size={16} color="#555" /> {title}
-      </Text>
-      <View style={styles.tagContainer}>
-        {data.map((item, index) => (
-          <View key={index} style={styles.tag}>
-            <Text style={styles.tagText}>{item}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-};
+/* -------------------------------------------------------------------------- */
+/* Huvudkomponenten: Hem                                                      */
+/* -------------------------------------------------------------------------- */
 
-// --- Komponent för "Senaste äventyren" (UPPDATERAD MED LIKE/KOMMENTAR) ---
-const CheckInCard = React.memo(({ item }) => {
-  if (!item || !item.user || !item.lekplats) {
-    return null;
-  }
-  
+export default function HomeScreen() {
+  const { theme } = useTheme();
   const navigation = useNavigation();
-  const { user, lekplats, incheckning } = item;
-  const userId = auth.currentUser?.uid;
 
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isLiked, setIsLiked] = useState(incheckning.likes?.includes(userId) || false);
-  const [likeCount, setLikeCount] = useState(incheckning.likes?.length || 0);
-
-  const { 
-    kommentar, bild, tidPaLekplats, gjordaAktiviteter, 
-    klaradeUtmaningar, taggadeVanner 
-  } = incheckning;
-
-  const date = incheckning.timestamp?.toDate().toLocaleDateString('sv-SE') || 'Okänt datum';
-
-  const hasExpandableContent = 
-    (gjordaAktiviteter?.length > 0) || 
-    (klaradeUtmaningar?.length > 0) || 
-    (taggadeVanner?.length > 0);
-
-  const handleLike = async () => {
-    if (!userId) return;
-    const checkInRef = doc(db, 'incheckningar', item.id);
-    if (isLiked) {
-      setIsLiked(false);
-      setLikeCount(prev => prev - 1);
-      try {
-        await updateDoc(checkInRef, { likes: arrayRemove(userId) });
-      } catch (error) {
-        console.error("Fel vid unlike:", error);
-        setIsLiked(true);
-        setLikeCount(prev => prev + 1);
-      }
-    } else {
-      setIsLiked(true);
-      setLikeCount(prev => prev + 1);
-      try {
-        await updateDoc(checkInRef, { likes: arrayUnion(userId) });
-      } catch (error) {
-        console.error("Fel vid like:", error);
-        setIsLiked(false);
-        setLikeCount(prev => prev - 1);
-      }
-    }
-  };
-  
-  const handleCommentPress = () => {
-    navigation.navigate('Comments', { checkInId: item.id, checkInComment: kommentar });
-  };
-
-  return (
-    <View style={styles.checkInCard}>
-      {/* Header */}
-      <View style={styles.checkInHeader}>
-        <Image 
-          source={{ uri: user.profilbildUrl || `https://placehold.co/40x40/e0e0e0/ffffff?text=${user.smeknamn?.[0] || '?'}` }} 
-          style={styles.checkInAvatar} 
-        />
-        <Text style={styles.checkInHeaderText}>
-          <Text style={{fontWeight: 'bold'}}>{user.smeknamn || 'Användare'}</Text>
-          <Text> på {lekplats.namn || 'okänd lekplats'}</Text>
-        </Text>
-      </View>
-
-      {/* Kommentar */}
-      {kommentar ? (
-        <Text style={styles.checkInComment}>{kommentar}</Text>
-      ) : null}
-
-      {/* Bild */}
-      {bild ? (
-        <Image source={{ uri: bild }} style={styles.checkInImage} />
-      ) : null}
-
-      {/* Expanderbart innehåll */}
-      {isExpanded && (
-        <View style={styles.expandedContent}>
-          {renderTagSection("Gjorda aktiviteter", gjordaAktiviteter, "game-controller-outline")}
-          {renderTagSection("Klarade utmaningar", klaradeUtmaningar, "trophy-outline")}
-          {renderTagSection("Taggade vänner", taggadeVanner, "people-outline")}
-        </View>
-      )}
-
-      {/* Footer med stats */}
-      <View style={styles.checkInFooter}>
-        <View style={styles.checkInStats}>
-          <Ionicons name="star" size={16} color="#FFD700" />
-          <Text style={styles.checkInStatText}>{incheckning.betyg || 0}</Text>
-          
-          {tidPaLekplats ? (
-            <>
-              <Ionicons name="time-outline" size={16} color="#748c94" style={{marginLeft: 10}} />
-              <Text style={styles.checkInStatText}>{tidPaLekplats} min</Text>
-            </>
-          ) : null}
-
-          <TouchableOpacity onPress={handleLike} style={{flexDirection: 'row', alignItems: 'center', marginLeft: 10}}>
-            <Ionicons name={isLiked ? "heart" : "heart-outline"} size={16} color={isLiked ? "#e74c3c" : "#748c94"} />
-            <Text style={styles.checkInStatText}>{likeCount}</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity onPress={handleCommentPress} style={{flexDirection: 'row', alignItems: 'center', marginLeft: 10}}>
-            <Ionicons name="chatbubble-outline" size={16} color="#748c94" />
-            <Text style={styles.checkInStatText}>{incheckning.commentCount || 0}</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.checkInDate}>{date}</Text>
-      </View>
-
-      {/* "Visa mer"-knapp */}
-      {hasExpandableContent && (
-        <TouchableOpacity 
-          style={styles.toggleExpandButton} 
-          onPress={() => setIsExpanded(!isExpanded)}
-        >
-          <Text style={styles.toggleExpandText}>
-            {isExpanded ? 'Visa mindre' : 'Visa mer...'}
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-});
-
-// --- Huvudkomponenten för Hemskärmen ---
-function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
   const [discoverPlaygrounds, setDiscoverPlaygrounds] = useState([]);
   const [checkInFeed, setCheckInFeed] = useState([]);
-  
-  // --- NY STATE FÖR INFINITE SCROLL ---
+  const [userLocation, setUserLocation] = useState(null);
+
+  // Infinite scroll-state
   const [loadingMore, setLoadingMore] = useState(false);
-  const [lastVisible, setLastVisible] = useState(null); // Håller koll på sista dokumentet
-  const [hasMore, setHasMore] = useState(true); // Finns det mer att hämta?
+  const [lastVisible, setLastVisible] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
 
   const userId = auth.currentUser?.uid;
 
-  // --- HJÄLPFUNKTION FÖR ATT BERIKA FLÖDET (för att undvika kod-duplicering) ---
-  const enrichFeed = async (checkInsData) => {
-    // Hämta alla unika ID:n som behövs
-    let userIdsToFetch = new Set(checkInsData.map(c => c.userId));
-    const playgroundIdsToFetch = [...new Set(checkInsData.map(c => c.lekplatsId))];
-    
-    // Hämta taggade vänner-ID:n
-    checkInsData.forEach(c => {
-      if (c.taggadeVanner && Array.isArray(c.taggadeVanner)) {
-        c.taggadeVanner.forEach(friendId => userIdsToFetch.add(friendId));
+  // Hämta användarens position
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        
+        const location = await Location.getCurrentPositionAsync({});
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      } catch (e) {
+        console.warn('Kunde inte hämta position:', e);
       }
-    });
+    })();
+  }, []);
 
-    // Hämta profildata
-    const userPromises = [...userIdsToFetch].map(id => getDoc(doc(db, 'users', id)));
-    const userDocs = await Promise.all(userPromises);
-    const usersMap = {};
-    userDocs.forEach(docSnap => {
-      if (docSnap.exists()) usersMap[docSnap.id] = docSnap.data();
-    });
-
-    // Hämta lekplatsdata
-    const playgroundPromises = playgroundIdsToFetch.map(id => getDoc(doc(db, 'lekplatser', id)));
-    const playgroundDocs = await Promise.all(playgroundPromises);
-    const playgroundsMap = {};
-    playgroundDocs.forEach(docSnap => {
-      if (docSnap.exists()) playgroundsMap[docSnap.id] = docSnap.data();
-    });
-
-    // 6. Kombinera allt till ett snyggt flöde
-    return checkInsData.map(incheckning => {
-      // Byt ut taggadeVanner-ID:n mot smeknamn
-      const taggadeVannerSmeknamn = (incheckning.taggadeVanner || []).map(friendId => {
-        return usersMap[friendId]?.smeknamn || 'Okänd';
-      });
-
-      return {
-        id: incheckning.id,
-        incheckning: {
-          ...incheckning,
-          taggadeVanner: taggadeVannerSmeknamn // Ersätt med smeknamn
-        },
-        user: usersMap[incheckning.userId],
-        lekplats: playgroundsMap[incheckning.lekplatsId]
-      };
-    });
-  };
-
-  // --- Funktion för att hämta FÖRSTA SIDAN data ---
+  // 🔄 fetchHomeScreenData använder nu enrichFeed-servicen
   const fetchHomeScreenData = async () => {
     if (!userId) return;
     setLoading(true);
-    setHasMore(true); // Återställ vid ny hämtning
+    setHasMore(true);
 
     try {
-      // 1. Hämta användardata
-      const userDocRef = doc(db, 'users', userId);
-      const userDocSnap = await getDoc(userDocRef);
-      if (!userDocSnap.exists()) throw new Error("Användaren finns inte");
-      
-      const currentUserData = userDocSnap.data();
+      const userSnap = await getDoc(doc(db, 'users', userId));
+      if (!userSnap.exists()) throw new Error('Användaren finns inte.');
+      const currentUserData = userSnap.data();
       setUserData(currentUserData);
+
       const visitedIds = currentUserData.visitedPlaygroundIds || [];
       const friendIds = currentUserData.friends || [];
 
-      // 2. Hämta "Upptäck"-lekplatser
-      const playgroundsColRef = collection(db, 'lekplatser');
-      const playgroundsSnapshot = await getDocs(playgroundsColRef);
-      const allPlaygrounds = playgroundsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      const discoverList = allPlaygrounds
-        .filter(p => !visitedIds.includes(p.id))
-        .slice(0, 3);
+      // Hämta lekplatser och sortera efter avstånd
+      const pgSnapshot = await getDocs(collection(db, 'lekplatser'));
+      const allPlaygrounds = pgSnapshot.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter((p) => p.status !== 'review');
+      
+      let discoverList = [];
+      if (userLocation) {
+        // Beräkna avstånd för alla lekplatser
+        const playgroundsWithDistance = allPlaygrounds
+          .map(p => {
+            const pos = parsePosition(p.position);
+            if (!pos) return null;
+            const distance = calculateDistance(userLocation, pos);
+            return { ...p, distance };
+          })
+          .filter(p => p !== null && p.distance !== null);
+        
+        // Sortera efter avstånd och ta de 5 närmaste
+        playgroundsWithDistance.sort((a, b) => a.distance - b.distance);
+        discoverList = playgroundsWithDistance.slice(0, 5);
+      } else {
+        // Fallback: visa slumpmässiga om vi inte har position
+        discoverList = allPlaygrounds.slice(0, 5);
+      }
+      
       setDiscoverPlaygrounds(discoverList);
 
-      // 3. Hämta FÖRSTA SIDAN "Senaste äventyren"
       const userAndFriendsIds = [...friendIds, userId];
-      if (userAndFriendsIds.length > 0) {
-        const checkInsQuery = query(
-          collection(db, 'incheckningar'),
-          where('userId', 'in', userAndFriendsIds),
-          orderBy('timestamp', 'desc'),
-          limit(10) // Hämta de 10 första
-        );
-        const checkInsSnapshot = await getDocs(checkInsQuery);
-        // *** VIKTIG ÄNDRING FÖR ATT FÅ DOKUMENT-ID ***
-        const checkInsData = checkInsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-        // Spara det sista dokumentet för paginering
-        setLastVisible(checkInsSnapshot.docs[checkInsSnapshot.docs.length - 1]);
-        if (checkInsSnapshot.docs.length < 10) {
-          setHasMore(false); // Det fanns färre än 10, ingen mer data
-        }
-
-        // 4. Berika och sätt flödet
-        const finalFeed = await enrichFeed(checkInsData);
-        setCheckInFeed(finalFeed);
-      } else {
+      if (userAndFriendsIds.length === 0) {
+        setCheckInFeed([]);
         setHasMore(false);
+        setLoading(false);
+        return;
       }
+
+      const idChunks = chunk(userAndFriendsIds, 10);
+      const pageSize = 10;
+      const allResults = [];
+      let lastDocForPaging = null;
+
+      for (const ids of idChunks) {
+        const q1 = query(
+          collection(db, 'incheckningar'),
+          where('userId', 'in', ids),
+          orderBy('timestamp', 'desc'),
+          limit(pageSize)
+        );
+        const snap = await getDocs(q1);
+        if (snap.docs.length > 0) {
+          lastDocForPaging = snap.docs[snap.docs.length - 1];
+          snap.docs.forEach((d) => allResults.push({ id: d.id, ...d.data() }));
+        }
+      }
+
+      allResults.sort((a, b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0));
+      const page = allResults.slice(0, pageSize);
+
+      setLastVisible(lastDocForPaging);
+      setHasMore(page.length === pageSize);
+
+      // 🟢 HÄR BERIKAR VI DATAN
+      const finalFeed = await enrichFeed(page);
+      setCheckInFeed(finalFeed);
     } catch (error) {
-      console.error("Fel vid hämtning av Hemskärmsdata:", error);
-      Alert.alert("Fel", "Kunde inte ladda flödet. Kontrollera Firestore-index.");
+      console.error('Fel vid hämtning av Hemskärmsdata:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- NY FUNKTION: HÄMTA MER DATA (INFINITE SCROLL) ---
+  // 🔄 fetchMoreCheckIns använder nu också enrichFeed-servicen
   const fetchMoreCheckIns = async () => {
-    // Stoppa om vi redan laddar, eller om det inte finns mer data
     if (loadingMore || !hasMore || !lastVisible) return;
-    
     setLoadingMore(true);
-
     try {
       const friendIds = userData?.friends || [];
       const userAndFriendsIds = [...friendIds, userId];
+      const idChunks = chunk(userAndFriendsIds, 10);
+      const pageSize = 10;
+      const allResults = [];
+      let newLastDoc = null;
 
-      // Skapa en ny fråga som börjar EFTER det sista dokumentet
-      const nextQuery = query(
-        collection(db, 'incheckningar'),
-        where('userId', 'in', userAndFriendsIds),
-        orderBy('timestamp', 'desc'),
-        startAfter(lastVisible), // <-- Magin!
-        limit(10)
-      );
-
-      const checkInsSnapshot = await getDocs(nextQuery);
-      // *** VIKTIG ÄNDRING FÖR ATT FÅ DOKUMENT-ID ***
-      const newCheckInsData = checkInsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-
-      // Uppdatera 'lastVisible' för nästa hämtning
-      setLastVisible(checkInsSnapshot.docs[checkInsSnapshot.docs.length - 1]);
-      if (checkInsSnapshot.docs.length < 10) {
-        setHasMore(false); // Inga fler dokument
+      for (const ids of idChunks) {
+        const qNext = query(
+          collection(db, 'incheckningar'),
+          where('userId', 'in', ids),
+          orderBy('timestamp', 'desc'),
+          startAfter(lastVisible),
+          limit(pageSize)
+        );
+        const snap = await getDocs(qNext);
+        if (snap.docs.length) {
+          newLastDoc = snap.docs[snap.docs.length - 1];
+          snap.docs.forEach((d) => allResults.push({ id: d.id, ...d.data() }));
+        }
       }
 
-      // Berika och lägg till i flödet
-      const newFinalFeed = await enrichFeed(newCheckInsData);
-      setCheckInFeed(prevFeed => [...prevFeed, ...newFinalFeed]);
-      
+      allResults.sort((a, b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0));
+      const page = allResults.slice(0, pageSize);
+
+      if (newLastDoc) setLastVisible(newLastDoc);
+      setHasMore(page.length === pageSize);
+
+      // 🟢 BERIKA MER DATA
+      const newFinalFeed = await enrichFeed(page);
+      setCheckInFeed((prev) => [...prev, ...newFinalFeed]);
     } catch (error) {
-      console.error("Fel vid hämtning av mer data:", error);
+      console.error('Fel vid hämtning av mer data:', error);
     } finally {
       setLoadingMore(false);
     }
   };
 
-  // Ladda om all data när skärmen fokuseras
   useFocusEffect(
     useCallback(() => {
-      fetchHomeScreenData(); // Kör den initiala hämtningen
-    }, [userId])
+      fetchHomeScreenData();
+    }, [userId, userLocation])
   );
 
-  // --- Header-komponent för FlatList ---
-  const renderHeader = () => (
-    <View>
-      <Text style={styles.sectionTitle}>Upptäck nya lekplatser</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.discoverScroll}>
-        {discoverPlaygrounds.length > 0 ? (
-          discoverPlaygrounds.map(item => <DiscoverCard key={item.id} item={item} />)
-        ) : (
-          !loading && <Text style={styles.emptyText}>Inga nya lekplatser att upptäcka.</Text>
-        )}
-      </ScrollView>
-      <Text style={styles.sectionTitle}>Senaste äventyren</Text>
-    </View>
-  );
+  const Header = () => {
+    const displayName = userData?.smeknamn || 'Hej!';
+    const profileUrl = userData?.profilbildUrl;
+    const fallbackInitial = (displayName || 'A').trim().charAt(0).toUpperCase();
+    const fallbackUrl = `https://ui-avatars.com/api/?name=${fallbackInitial}&background=e0e0e0&color=777`;
 
-  // --- NY FOOTER-KOMPONENT FÖR SPINNER ---
-  const renderFooter = () => {
-    if (!loadingMore) return null; // Visa inget om vi inte laddar
     return (
-      <ActivityIndicator
-        style={{ marginVertical: 20 }}
-        size="large"
-      />
+      <View style={{ paddingHorizontal: theme.space.xl, paddingTop: theme.space.lg, paddingBottom: theme.space.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.space.md }}>
+          <View style={[styles.avatarContainer, { backgroundColor: theme.colors.bgSoft }]}>
+            <Image source={{ uri: profileUrl || fallbackUrl }} style={{ width: '100%', height: '100%' }} />
+          </View>
+          <View>
+            <Text style={{ color: theme.colors.text, fontWeight: '800', fontSize: 18 }}>{displayName}</Text>
+            <Text style={{ color: theme.colors.textMuted }}>Dags för lek?</Text>
+          </View>
+        </View>
+
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Lekplatser nära dig</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: theme.space.xl }}>
+          {discoverPlaygrounds.map((item) => <DiscoverCard key={item.id} item={item} userLocation={userLocation} />)}
+        </ScrollView>
+
+        <Text style={[styles.sectionTitle, { marginTop: theme.space.lg, color: theme.colors.text }]}>Senaste äventyren</Text>
+      </View>
     );
   };
 
   if (loading && checkInFeed.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" />
+      <SafeAreaView style={[styles.center, { backgroundColor: theme.colors.bg }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <FlatList
         data={checkInFeed}
-        renderItem={({ item }) => <CheckInCard item={item} />}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={() => (
-          !loading ? <Text style={styles.emptyText}>Ditt flöde är tomt. Gå ut och lek!</Text> : null
+        ListHeaderComponent={<Header />}
+        renderItem={({ item }) => (
+          <CheckInCard 
+            item={{
+              ...item.incheckning,
+              id: item.id,
+              userSmeknamn: item.user?.smeknamn || item.incheckning.userSmeknamn,
+              profilbildUrl: item.user?.profilbildUrl,
+              bildUrl: item.incheckning.bildUrl || item.incheckning.bild,
+            }} 
+            playgroundName={item.lekplats?.namn} 
+            onPressComments={() =>
+              navigation.navigate('Comments', {
+                checkInId: item.id,
+                checkInComment: item.incheckning.kommentar || '',
+              })
+            }
+          />
         )}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        
-        // --- NYA PROPS FÖR INFINITE SCROLL ---
-        onEndReached={fetchMoreCheckIns} // Funktion som anropas vid botten
-        onEndReachedThreshold={0.5} // Hur långt från botten (0.5 = 50%)
-        ListFooterComponent={renderFooter} // Visa spinnern
+        onEndReached={fetchMoreCheckIns}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={() => loadingMore ? <ActivityIndicator style={{ marginVertical: 20 }} /> : null}
+        contentContainerStyle={{ paddingBottom: theme.space.xl * 2 }}
       />
     </SafeAreaView>
   );
 }
 
-// --- STYLES (med uppdateringar) ---
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  avatarContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    overflow: 'hidden',
+    marginRight: 12,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 20,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  discoverScroll: {
-    paddingLeft: 20,
-  },
-  discoverCard: {
-    width: 250,
-    height: 150,
-    marginRight: 15,
-    borderRadius: 15,
-    overflow: 'hidden',
-  },
-  discoverImage: {
-    width: '100%',
-    height: '100%',
-  },
-  discoverOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  discoverTitle: {
-    position: 'absolute',
-    bottom: 30,
-    left: 15,
-    color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    marginBottom: 8,
   },
-  discoverSubtitle: {
+  discoverBadge: {
     position: 'absolute',
-    bottom: 10,
-    left: 15,
-    color: 'white',
-    fontSize: 14,
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  discoverRating: {
+  discoverBadgeText: { color: '#fff', marginLeft: 4, fontWeight: '700', fontSize: 12 },
+  distanceBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: 8,
+    left: 8,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 10,
   },
-  discoverRatingText: {
-    color: 'white',
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  checkInCard: {
-    backgroundColor: 'white',
-    marginHorizontal: 15,
-    marginBottom: 15,
-    borderRadius: 10,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  checkInHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  checkInAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-    backgroundColor: '#e0e0e0',
-  },
-  checkInHeaderText: {
-    flex: 1,
-    fontSize: 14,
-  },
-  checkInComment: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 10,
-    fontStyle: 'italic',
-  },
-  checkInImage: {
-    width: '100%',
-    height: 200, 
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  checkInFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingTop: 10,
-  },
-  checkInStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap', 
-  },
-  checkInStatText: {
-    marginLeft: 5,
-    color: '#748c94',
-  },
-  checkInDate: {
-    fontSize: 12,
-    color: '#aaa',
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#888',
-    marginTop: 20,
-    fontSize: 14,
-  },
-  expandedContent: {
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    marginTop: 10,
-    paddingTop: 10,
-  },
-  tagSection: {
-    marginBottom: 10,
-  },
-  tagTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#555',
-    marginBottom: 5,
-  },
-  tagContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  tag: {
-    backgroundColor: '#e0e0e0',
-    borderRadius: 15,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    marginRight: 5,
-    marginBottom: 5,
-  },
-  tagText: {
-    fontSize: 12,
-    color: '#333',
-  },
-  toggleExpandButton: {
-    paddingTop: 10,
-    marginTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  toggleExpandText: {
-    fontSize: 14,
-    color: '#007AFF', 
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
+  distanceBadgeText: { color: '#fff', marginLeft: 4, fontWeight: '700', fontSize: 12 },
 });
-
-export default HomeScreen;
-

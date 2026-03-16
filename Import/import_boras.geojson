@@ -1,0 +1,3387 @@
+{
+	"type" : "FeatureCollection",
+	"name" : "lekplatser",
+	"features" : [
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9487354069, 57.7176514309 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1752",
+				"name" : "Lekfortet",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser/annelundsparkenlekfortet.4.4a371097158f308d0736fb.html",
+				"updated" : "2025-02-19",
+				"description" : "Lekfortet som ligger i vackra Annelundsparken är väl värd ett besök. Här finns många olika lekredskap anpassad för olika åldrar. I anslutning till lekplatsen finns grillmöjligheter och toalett öppen kl: 10-18. Är man bilburen finns det parkeringsplatser utanför Annelundsvillan.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2024
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9684964866, 57.7087699111 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1343",
+				"name" : "Backgårdshagen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-11-22",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterpyramid, lekhus och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Surfing",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8176472782, 57.7194858611 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1770",
+				"name" : "Lindebergshult",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-11-29",
+				"description" : "På denna lekplats finner du bland annat gungor, karusell, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Enhörningar",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9548259383, 57.7192230779 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1312",
+				"name" : "Skogstomteparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, polisbil, brandbil, cykelkarusell och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Blåljus",
+				"last_renovated" : 2021
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9586753156, 57.7207330916 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1313",
+				"name" : "Kondoren",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2009
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9699510988, 57.7283531021 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1315",
+				"name" : "Fjärdingsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2024-03-20",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2001
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9739503106, 57.7357946077 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1317",
+				"name" : "Odparken ",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.983742753, 57.7356083935 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1319",
+				"name" : "Attoparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0165160531, 57.732683485 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1326",
+				"name" : "Mönsterparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0142550577, 57.7352299365 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1327",
+				"name" : "Myråsgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2012
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0077129518, 57.7305533477 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1324",
+				"name" : "Aspgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2011
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0166233401, 57.7381144063 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1328",
+				"name" : "Damastgatans lek- och aktivitetsplats",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-01-04",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek sandlåda, basketplan och pumptrackbana.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2009
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9519528983, 57.7544852781 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1294",
+				"name" : "Björkhemsgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : false,
+				"theme" : "Havet",
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9426770757, 57.7544532649 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1295",
+				"name" : "Lindormsgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Bondgård",
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9400584712, 57.7468338011 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1297",
+				"name" : "Tomteparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2013
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9526587032, 57.7262024449 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1307",
+				"name" : "Björkängsgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat gungor, lekhus, klätterpyramid och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Surfing",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9479148544, 57.729334849 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1306",
+				"name" : "Baldersplatsen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2010
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9537300068, 57.7232727827 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1309",
+				"name" : "Nelsonparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-10-24",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, linbana, hinderbana, karusell och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Elefanter",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9497421052, 57.7241313558 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1310",
+				"name" : "Kvarnbergsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-11-27",
+				"description" : "På denna lekplats finner du bland annat gungor, karusell, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Enhörningar",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9515542382, 57.7209851424 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1311",
+				"name" : "Kv. Lärkan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2015
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9544282748, 57.7015740399 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1349",
+				"name" : "Tjalveparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-02-13",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Fåglar",
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9604711561, 57.7220698406 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1314",
+				"name" : "Villabergsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-09-13",
+				"description" : "På denna lekplats finner du, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.005042087, 57.7223910727 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1333",
+				"name" : "Svensgärdeparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2015
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0286161429, 57.7439393042 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1332",
+				"name" : "Jutegatan-Hampgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-11-17",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2013
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9461710788, 57.7519170842 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1749",
+				"name" : "Sommarleken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2011
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.7982533157, 57.7065752222 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1396",
+				"name" : "Lillhemsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat karusell, lekstuga, klätterlek och gungor. ",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Trädgårdslandet",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8505192588, 57.6271111725 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1409",
+				"name" : "Åsakroken 72",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-07-27",
+				"description" : "På denna lekplats finner du bland annat karusell, lekstuga, klätterlek och gungor. ",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Trädgårdslandet",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9797040646, 57.720185467 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1335",
+				"name" : "Stora Ekarängen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2015
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9676299651, 57.7589526355 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "11023",
+				"name" : "Räfserydsvägen Tosseryd",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-10-22",
+				"description" : "Denna lekplats erbjuder gungor, karusell, lekhus och klätterlek av olika svårighetsgrad.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Småkryp",
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9822450627, 57.715297065 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1336",
+				"name" : "Hjärtans fröjd",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2012
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.961091354, 57.7076447497 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1345",
+				"name" : "Budkavleparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9857242579, 57.7033534354 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1347",
+				"name" : "Brotorp",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, en högre kombilek med rörrutsch och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Hokus pokus",
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9914420872, 57.7268741065 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1322",
+				"name" : "Bodaparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-02-21",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2015
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8301023119, 57.7189955577 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1394",
+				"name" : "Björkdalsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Musik",
+				"last_renovated" : 2017
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9787219586, 57.7146375999 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1338",
+				"name" : "Mellomgårdshagen ",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2013
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9473914157, 57.7372568598 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1302",
+				"name" : "Borgarskogen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-25",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, tivolispeglar, karusell och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Giraffer",
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9512483338, 57.7371462771 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1303",
+				"name" : "Klostergården",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-25",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2011
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9489586795, 57.7332011683 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1304",
+				"name" : "Sagavallen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-25",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, studsmatta, snurrkarusell och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Spindlar",
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9413718848, 57.6987798073 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1352",
+				"name" : "Solgläntan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-07-22",
+				"description" : "På denna lekplats finner du bland annat gungor, karusell, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Lilla staden",
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9494105116, 57.6971346753 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1350",
+				"name" : "Storängen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, karusell, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Bondgård",
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9557277909, 57.7573941418 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1291",
+				"name" : "Långestenslyckan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-11-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Lilla staden",
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.937848032, 57.700992469 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1353",
+				"name" : "Visthusparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, karusell, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Pollinering",
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9363007619, 57.7043671203 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1354",
+				"name" : "Svalgångsgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9506607272, 57.7099140799 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1356",
+				"name" : "Glacialplatsen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2015
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9221408572, 57.7130342173 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1359",
+				"name" : "Kaptensplatsen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-29",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9184218873, 57.7257306551 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1364",
+				"name" : "Ribbingsgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2012
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9293364248, 57.7264392748 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1363",
+				"name" : "Kv. Bagaren ",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-24",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2015
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9037663024, 57.7170636023 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1366",
+				"name" : "Tullatorget",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2026-01-02",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Bygg och anläggning",
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9777028467, 57.7775100443 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1372",
+				"name" : "Loggvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2009
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8216879377, 57.7193998444 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1764",
+				"name" : "Hjortstigen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-11-19",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Fordon",
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0158099977, 57.8009246584 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1373",
+				"name" : "Kilsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2013
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9464974285, 57.7577343666 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1292",
+				"name" : "Dungen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2010
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0198883784, 57.798419212 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1374",
+				"name" : "Kröklingsvägen-Åsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, karusell, boulebana och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Lantraser",
+				"last_renovated" : 2021
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0008348899, 57.816638698 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1375",
+				"name" : "Björkvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2008
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9892648988, 57.8241190726 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1377",
+				"name" : "Hedagårdsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2010
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0047695175, 57.8225323591 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1378",
+				"name" : "Klockarebolet",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, en stor drake, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Drake och borg",
+				"last_renovated" : 2017
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0112039848, 57.8218112567 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1379",
+				"name" : "Ringvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-12-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Surfing",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8987810135, 57.8053473532 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1382",
+				"name" : "Inägovägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2012
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9038565635, 57.8054107907 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1383",
+				"name" : "Ingeltorpsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, karusell och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Pollinering",
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0579669117, 57.6825891299 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1386",
+				"name" : "Bråthultsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, en wilda western kuliss och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Wilda western",
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9291608075, 57.72402281 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1360",
+				"name" : "Norrbyparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-08",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2008
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.227218379, 57.6874237462 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1387",
+				"name" : "Stomsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Sagor",
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.1216497328, 57.7176576279 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1388",
+				"name" : "Talgoxvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Lantraser",
+				"last_renovated" : 2021
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.1385504313, 57.7983851323 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1390",
+				"name" : "Ekebergsgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Fåglar",
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8730799396, 57.7186075283 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1391",
+				"name" : "Myrlundavägen - Solundavägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8200379634, 57.7143054668 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1393",
+				"name" : "Sjöhagen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2007
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9347013134, 57.7388015635 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1300",
+				"name" : "Gabriellaplatsen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2016
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9410768538, 57.7366356112 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1301",
+				"name" : "Högsboparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2009
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8993422051, 57.728324574 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1368",
+				"name" : "Hestra ringväg",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-03-13",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2009
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9071669879, 57.7314055623 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1369",
+				"name" : "Hestra klint",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-03-13",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2010
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8993954051, 57.7350103975 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1370",
+				"name" : "Gambaparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-03-13",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2009
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8856245634, 57.7449920931 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1371",
+				"name" : "Ripvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-03-13",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, hinderbana och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Djungel",
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.7946150723, 57.7181296419 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1398",
+				"name" : "Stugvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, karusell, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Bageri",
+				"last_renovated" : 2021
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8223940329, 57.7713425689 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1400",
+				"name" : "Blåklintsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Blåklint",
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8247589328, 57.77421153 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1401",
+				"name" : "Konvaljvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek i olika svårighetsgrad och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Rymden",
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.7511908677, 57.8067450939 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1402",
+				"name" : "Klostervägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2016
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8871629445, 57.6612514954 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1403",
+				"name" : "Madvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Sagor",
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8700652816, 57.6394508821 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1404",
+				"name" : "Kärrvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2016
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8769864867, 57.6257257867 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1406",
+				"name" : "Fagersro",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Fiskebåtar",
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8534860023, 57.6246432863 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1408",
+				"name" : "Björkgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, cykelkarusell, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Fordon",
+				"last_renovated" : 2017
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.7924244496, 57.6058325429 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1432",
+				"name" : "Åkervägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, studsmatta, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Spindlar",
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0120851016, 57.8271645211 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1380",
+				"name" : "Tärnavägen ",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, tubrutsch, cirkusscen och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Cirkus",
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9799203508, 57.717881176 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1337",
+				"name" : "Högagärdet",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-11-30",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2016
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0175630545, 57.8293872603 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1381",
+				"name" : "Lorensberg",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2011
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8799904802, 57.5968595104 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1435",
+				"name" : "Kampagården",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2011
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9707932308, 57.7149361047 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1340",
+				"name" : "Brakteatern",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2024-03-19",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2010
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9594152242, 57.7365586622 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1305",
+				"name" : "Liljeberget",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2016
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9578050913, 57.7242542684 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1308",
+				"name" : "Björkängsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.931740818, 57.7241889558 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1362",
+				"name" : "Norrby Torg",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0222820676, 57.7337076743 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1436",
+				"name" : "Brämhults-Kärra",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2011
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9244356962, 57.7243716655 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1437",
+				"name" : "Sinnenas park",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9951694106, 57.8178947664 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1438",
+				"name" : "Asklandaparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, en högre kombilek med rörrutsch och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Hokus pokus",
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9800787713, 57.731912418 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1318",
+				"name" : "Dövedalsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-08",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2010
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.1749565701, 57.7550906732 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1439",
+				"name" : "Finas väg",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2012
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8465725732, 57.6680559469 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1440",
+				"name" : "Bosnäs",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2015
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9392718275, 57.7499878725 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1296",
+				"name" : "Sjöboparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser/sjoboparken.4.293b82ba1775dc0ba76a75ef.html",
+				"updated" : "2022-06-08",
+				"description" : "I Sjöboparken finns plats för mycket lek och aktivitet.\nParkens hinderbana löper runt hela parken och det finns tidtagningsur för den tävlingsinriktade. I parken även finns gungor, lekställning, linbana, yta för bollspel, snadlåda och grillmöjligheter.",
+				"lighting" : true,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2016
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9262925729, 57.7468109094 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1299",
+				"name" : "Ryda lekplats",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9546975179, 57.7149578855 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1357",
+				"name" : "Österlidsplatsen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2012
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.1341568999, 57.7960824324 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1441",
+				"name" : "Treklövergatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2016
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8299971868, 57.7044811952 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1442",
+				"name" : "Lyckebo sjöstad",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2015
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.7953672969, 57.6077125994 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1587",
+				"name" : "Elias väg",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.922190878, 57.7121999994 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1630",
+				"name" : "Majorslunden",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0084202186, 57.7343289378 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1325",
+				"name" : "Granliden",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, hinderbana och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Djungel",
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9766428053, 57.7146153277 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1339",
+				"name" : "Björsängen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Skog och natur",
+				"last_renovated" : 2017
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9469903266, 57.6993289345 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1351",
+				"name" : "Tingsgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2008
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9522176722, 57.7595185884 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1748",
+				"name" : "Sjöliden",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.1150243088, 57.7216290595 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1899",
+				"name" : "Näckrosvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-02-21",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, en wilda western kuliss och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Wilda western",
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9772557386, 57.7353223727 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1753",
+				"name" : "Mollaparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2017
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0042716405, 57.7335272715 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1754",
+				"name" : "Önparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2016
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9927945144, 57.7208586952 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1756",
+				"name" : "Peppargården",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Blommor och växter",
+				"last_renovated" : 2017
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9645684045, 57.7116293828 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1757",
+				"name" : "Trandareds Vall",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9757578618, 57.7161950539 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1763",
+				"name" : "Västergärdet",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2011
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9892349409, 57.8150392788 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1906",
+				"name" : "Kaprifolvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, polisbil med fängelse, brandbil, cykelkarusell och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Blåljus",
+				"last_renovated" : 2021
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9584523924, 57.7302590294 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1751",
+				"name" : "Högvallagatan ",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-10-26",
+				"description" : "På denna lekplats finner du bland annat linbana, gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Vildmark",
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8673327621, 57.6230299947 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1407",
+				"name" : "Fagersberg lilla",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-08-31",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2008
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9022150928, 57.7331257496 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1769",
+				"name" : "Lillesjöparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-03-13",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2013
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9758538184, 57.7260599416 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1316",
+				"name" : "Hässleholmsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-08",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.983514714, 57.7211499945 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1334",
+				"name" : "Lilla Ekarängen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser/lillaekarangen.4.4a371097158f308d07388e.html",
+				"updated" : "2022-06-08",
+				"description" : "Lekplatsen är stor till ytan och inbjuder till rörelse i olika former. Här kan man dansa och tävla under dansbågen eller öva sin balans, styrka och smidighet i hinderbanan. På Lilla Ekarängen finns även\nklätterlek,\nfjädergungor,\nsandlåda,\nkompisgunga och\nyta för multisport.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2011
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9401785107, 57.7188263495 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1358",
+				"name" : "Stadsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser/stadsparken.4.4a371097158f308d0738d0.html",
+				"updated" : "2022-06-08",
+				"description" : "På denna lekplats finner du bland annat gungor, linbana, klätterlek i olika svårighetsgrad, vattenlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2013
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9200829944, 57.720035192 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1760",
+				"name" : "Ramnaparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser/ramnaparken.4.4a371097158f308d0738a5.html",
+				"updated" : "2022-06-08",
+				"description" : "Ramnaparkens lekplats ligger vackert utmed Ramnasjön. Temat för lekplatsen anspelar på miljön där den ligger med sin närhet till vatten och natur. Här finns bland annat ett skeppsvrak att klättra på, gungor och linbana.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Skeppsvrak",
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9393681502, 57.7453271385 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1298",
+				"name" : "Blombacken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2008
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9858302026, 57.7339874067 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1320",
+				"name" : "Femtoparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat gungor, karusell, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Enhörningar",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9133988611, 57.7222964275 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1365",
+				"name" : "Fixstjärnan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2026-01-02",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2012
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9733230894, 57.7105625659 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1342",
+				"name" : "Hultängen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2011
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9662873377, 57.7078861458 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1344",
+				"name" : "Svenljungaparken ",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, karusell och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Bageri",
+				"last_renovated" : 2021
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.95936461, 57.7032819938 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1348",
+				"name" : "Drakskeppsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-06-29",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, lekhus, karusell och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Trädgårdslandet",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9706107387, 57.7063433036 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1346",
+				"name" : "Tåmarksgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0220064841, 57.7014223725 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1385",
+				"name" : "Bäverstigen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2010
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8970371257, 57.7229990263 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1589",
+				"name" : "Sjögläntan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-03-13",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8664813882, 57.6327101423 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1405",
+				"name" : "Hagkällevägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Lantraser",
+				"last_renovated" : 2021
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8037880151, 57.6116985994 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1410",
+				"name" : "Ekvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9959691988, 57.7868961525 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1588",
+				"name" : "Gnejsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2013
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8552801486, 57.6304661282 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1773",
+				"name" : "Åsakroken 7",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-01-05",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2012
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8177498417, 57.7684830005 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1771",
+				"name" : "Lövkojeparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2023-10-24",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, karusell, cykelslinga och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Elefanter",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0675736094, 57.6481556406 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1904",
+				"name" : "Bastuvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, tubrutsch, klätterlek, cirkusscen och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Cirkus",
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.032136454, 57.7031253082 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1908",
+				"name" : "Slättängsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek i olika svårighetsgrad och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Fiskebåtar",
+				"last_renovated" : 2019
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8772398531, 57.6517566291 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1772",
+				"name" : "Egnahemsvägen ",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-06-30",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, stor snurrlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0043730138, 57.728356282 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1323",
+				"name" : "Brämhults Torg",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, rörrutsch och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Luft",
+				"last_renovated" : 2017
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.7776979197, 57.7106445371 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1399",
+				"name" : "Barrstigen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9170464368, 57.7238999075 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1761",
+				"name" : "Larsplatsen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9413283293, 57.7031375725 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1759",
+				"name" : "Fatbursgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-05-14",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, snurrkopp och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Hönshuset",
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9346045654, 57.7379970181 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1750",
+				"name" : "Erikslundsparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-06-07",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2010
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.796316249, 57.7145845058 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1397",
+				"name" : "Rullstensvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-05-30",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Hönshuset",
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8710729745, 57.6219781959 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1765",
+				"name" : "Fagersberg stora",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-08-31",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, linbana och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Vildmark",
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.7913515778, 57.6035194744 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1433",
+				"name" : "Andgränd -Tranvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-09-06",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, lekkulle och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Torpet",
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9410829467, 57.7134415054 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1355",
+				"name" : "Druveforskullen ",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-10-26",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, karusell, tivolispeglar och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Giraffer",
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8478299211, 57.7128453312 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1392",
+				"name" : "Maskrosvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2022-10-26",
+				"description" : "På denna lekplats är det torptema. Här finner du bland annat gungor, klätterlek, karusell och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Torpet",
+				"last_renovated" : 2022
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0214766996, 57.7405622034 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1331",
+				"name" : "Ängsgården-Ripgatan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2024-03-19",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, en drake, ett nedgrävt skelett, hinderbana och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Drakexpedition",
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8171489043, 57.6167030812 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1434",
+				"name" : "Bogrydsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2024-06-27",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, linbana och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Fort",
+				"last_renovated" : 2024
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9304979166, 57.7258516433 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1361",
+				"name" : "Kronängsparken ",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-03-19",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : false,
+				"theme" : null,
+				"last_renovated" : 2003
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9050439557, 57.7191719919 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1367",
+				"name" : "Arkturus",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-01-27",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, volträcke, karusell och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Trollskog",
+				"last_renovated" : 2024
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9887422685, 57.8171594983 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1376",
+				"name" : "Porsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-01-31",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2009
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0097191683, 57.8843240057 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1384",
+				"name" : "Ängsvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-08-26",
+				"description" : "På denna lekplats finner du bland annat gungor, karusell, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Lilla staden",
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.8333827453, 57.7251325083 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1395",
+				"name" : "Kvarnbäcksvägen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-10-03",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Ko",
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9600763362, 57.7104146364 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1341",
+				"name" : "Fyrken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-10-20",
+				"description" : "På denna lekplats finner du bland annat gungor, karusell, klätterlek, yta för basket och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Kossor",
+				"last_renovated" : 2025
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9508068177, 57.7562415186 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1293",
+				"name" : "Ekängsliden",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, karusell och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Trollskog",
+				"last_renovated" : 2024
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.1081351919, 57.7177471469 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1389",
+				"name" : "Pionvägen - Sjödal",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, en drake, ett nedgrävt skelett, hinderbana och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Drakexpedition",
+				"last_renovated" : 2020
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9726403116, 57.706099948 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1758",
+				"name" : "Guldbrandshagen",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek i olika svårighetsnivå och sandlåda.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Rymden",
+				"last_renovated" : 2018
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.1020634155, 57.7164564731 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "1909",
+				"name" : "Oxelvägen, badhusparken",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du bland annat gungor, klätterlek, karusell och sandlåda.",
+				"lighting" : false,
+				"accessibility" : true,
+				"theme" : "Havet",
+				"last_renovated" : 2023
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 12.9380240601, 57.7134654631 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "2800",
+				"name" : "Alelyckan",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : "https://www.boras.se/upplevaochgora/lekplatserochaktivitetsplatser/lekplatser.4.3cc917c815870110c12a1fcb.html",
+				"updated" : "2025-02-18",
+				"description" : "På denna lekplats finner du en studsmatta i form av en åtta. I parken finns även boulebana, en balansplatta och ett utegym.",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : null,
+				"last_renovated" : 2014
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : {
+				"type" : "Point",
+				"coordinates" : [ 13.0061587591, 57.8260764914 ]
+			},
+			"properties" : {
+				"source" : 2120001561,
+				"id" : "10616",
+				"name" : "Fristad nya stationspark",
+				"email" : "tekniska@boras.se",
+				"alt_source" : 1490,
+				"visit_url" : null,
+				"updated" : "2025-02-18",
+				"description" : "Lekplats med tågtema, här finns även gungor, karusell med mera",
+				"lighting" : true,
+				"accessibility" : true,
+				"theme" : "Tåg",
+				"last_renovated" : 2024
+			}
+		}
+	]
+}

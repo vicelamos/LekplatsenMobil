@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "lekplatsen-907fb",
+    "production": "lekplatsen-907fb",
+    "development": "viktor-2e4f9"
+  }
+}
