@@ -25,6 +25,7 @@ import { doc, getDoc, collection, getDocs, query, updateDoc, arrayUnion, arrayRe
 import { useTheme, mapStyle } from '../src/theme';
 import { Card as UICard, Chip, Input } from '../src/ui';
 import { parsePosition, calculateDistance, formatDistance } from '../utils/geo';
+import { enrichPlaygroundsWithImages } from '../src/services/feedService';
 import { useRef } from 'react';
 
 const FALLBACK_IMG = 'https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f';
@@ -40,7 +41,7 @@ const toPlaygroundPayload = (src = {}, fallbackId) => {
     name: src.namn || src.name || 'Lekplats',
     address: src.adress || src.address || '',
     description: src.beskrivning || src.description || '',
-    imageUrl: src.bildUrl || src.imageUrl || '',
+    imageUrl: src.resolvedImageUrl || src.bildUrl || src.imageUrl || '',
     equipment: src.utrustning || src.equipment || [],
     location,
   };
@@ -50,7 +51,9 @@ const toPlaygroundPayload = (src = {}, fallbackId) => {
 const PlaygroundCard = memo(({ item, isFavorite, onToggleFavorite, userLocation }) => {
   const navigation = useNavigation();
   const { theme } = useTheme();
-  const imageUrl = item.bildUrl || item.imageUrl || FALLBACK_IMG;
+
+  // Använd resolvedImageUrl om tillgänglig
+  const imageUrl = item.resolvedImageUrl || item.bildUrl || item.imageUrl || FALLBACK_IMG;
   
   const distance = useMemo(() => {
     if (!userLocation || !item.position) return null;
@@ -194,45 +197,10 @@ const AddPlaygroundFooter = memo(({ navigation }) => {
   );
 });
 
-/* ------------------------- Kartstil ------------------------- */
-const customMapStyle = [
-  {
-    "featureType": "poi",
-    "elementType": "labels",
-    "stylers": [{ "visibility": "off" }]
-  },
-  {
-    "featureType": "poi.business",
-    "stylers": [{ "visibility": "off" }]
-  },
-  {
-    "featureType": "transit",
-    "elementType": "labels.icon",
-    "stylers": [{ "visibility": "off" }]
-  },
-  {
-    "featureType": "water",
-    "elementType": "geometry",
-    "stylers": [{ "color": "#a2daf7" }]
-  },
-  {
-    "featureType": "landscape.natural",
-    "elementType": "geometry.fill",
-    "stylers": [{ "color": "#e8f5e9" }]
-  },
-  {
-    "featureType": "road",
-    "elementType": "geometry.stroke",
-    "stylers": [{ "color": "#ffffff" }]
-  }
-];
-
 /* ------------------------- Filter & Sorteringsmodal ------------------------- */
 const FilterSortModal = memo(({ visible, onClose, sortBy, setSortBy, minRating, setMinRating, selectedKommun, setSelectedKommun, kommuner }) => {
   const { theme } = useTheme();
-  const [expandedSection, setExpandedSection] = useState(null); // 'sort', 'rating', 'kommun'
-  
-  console.log('FilterSortModal render, visible:', visible);
+  const [expandedSection, setExpandedSection] = useState(null);
   
   const sortOptions = [
     { value: 'none', label: 'Standard', icon: 'remove' },
@@ -501,7 +469,6 @@ function SearchScreen() {
   const navigation = useNavigation();
   const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [allPlaygrounds, setAllPlaygrounds] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -511,14 +478,13 @@ function SearchScreen() {
   const [selectedPlayground, setSelectedPlayground] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
-  const [sortBy, setSortBy] = useState('none'); // 'none', 'rating', 'distance', 'name'
+  const [sortBy, setSortBy] = useState('none');
   const [minRating, setMinRating] = useState(0);
   const [selectedKommun, setSelectedKommun] = useState(null);
 
   const userId = auth.currentUser?.uid;
   const mapRef = useRef(null);
 
-  // Hämta unika kommuner från alla lekplatser
   const kommuner = useMemo(() => {
     const uniqueKommuner = [...new Set(allPlaygrounds
       .map(p => p.kommun)
@@ -527,13 +493,11 @@ function SearchScreen() {
     return uniqueKommuner;
   }, [allPlaygrounds]);
 
-  // Hämta användarens position
   useEffect(() => {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') return;
-        
         const location = await Location.getCurrentPositionAsync({});
         setUserLocation({
           latitude: location.coords.latitude,
@@ -548,11 +512,7 @@ function SearchScreen() {
   useEffect(() => {
     if (userLocation && mapRef.current && viewMode === 'map') {
       mapRef.current.animateToRegion(
-        {
-          ...userLocation,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
-        },
+        { ...userLocation, latitudeDelta: 0.02, longitudeDelta: 0.02 },
         1000,
       );
     }
@@ -562,7 +522,11 @@ function SearchScreen() {
     try {
       const q = query(collection(db, 'lekplatser'));
       const snap = await getDocs(q);
-      setAllPlaygrounds(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // 🟢 Berika alla lekplatser med bild från incheckningar om egen bild saknas
+      const enriched = await enrichPlaygroundsWithImages(raw);
+      setAllPlaygrounds(enriched);
 
       if (userId) {
         const userDoc = await getDoc(doc(db, 'users', userId));
@@ -596,24 +560,19 @@ function SearchScreen() {
   const filtered = useMemo(() => {
     let list = allPlaygrounds.filter(p => p.status !== 'review');
     
-    // Favoritfilter
     if (showFavoritesOnly) list = list.filter(p => favoriteIds.includes(p.id));
     
-    // Sökfilter
     const q = searchQuery.toLowerCase().trim();
     if (q) list = list.filter(p => (p.namn || '').toLowerCase().includes(q) || (p.adress || '').toLowerCase().includes(q));
     
-    // Betygfilter
     if (minRating > 0) {
       list = list.filter(p => (p.snittbetyg || 0) >= minRating);
     }
     
-    // Kommunfilter
     if (selectedKommun) {
       list = list.filter(p => p.kommun === selectedKommun);
     }
     
-    // Sortering
     if (sortBy === 'rating') {
       list = list.sort((a, b) => (b.snittbetyg || 0) - (a.snittbetyg || 0));
     } else if (sortBy === 'distance' && userLocation) {
@@ -622,9 +581,7 @@ function SearchScreen() {
         const posB = parsePosition(b.position);
         if (!posA) return 1;
         if (!posB) return -1;
-        const distA = calculateDistance(userLocation, posA);
-        const distB = calculateDistance(userLocation, posB);
-        return distA - distB;
+        return calculateDistance(userLocation, posA) - calculateDistance(userLocation, posB);
       });
     } else if (sortBy === 'name') {
       list = list.sort((a, b) => (a.namn || '').localeCompare(b.namn || '', 'sv'));
@@ -633,18 +590,13 @@ function SearchScreen() {
     return list;
   }, [searchQuery, allPlaygrounds, showFavoritesOnly, favoriteIds, sortBy, minRating, userLocation, selectedKommun]);
 
-  // Zooma till kommun när den väljs och kartvyn är aktiv
   useEffect(() => {
     if (selectedKommun && viewMode === 'map' && mapRef.current && filtered.length > 0) {
       const firstInKommun = filtered[0];
       const pos = parsePosition(firstInKommun.position);
       if (pos) {
         mapRef.current.animateToRegion(
-          {
-            ...pos,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          },
+          { ...pos, latitudeDelta: 0.05, longitudeDelta: 0.05 },
           1000,
         );
       }
@@ -654,8 +606,6 @@ function SearchScreen() {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" /></View>;
 
   const hasActiveFilters = sortBy !== 'none' || minRating > 0 || selectedKommun !== null;
-  
-  console.log('Filter modal visible:', filterModalVisible);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={['top']}>
@@ -664,10 +614,7 @@ function SearchScreen() {
         viewMode={viewMode} setViewMode={setViewMode}
         isAdmin={isAdmin} navigation={navigation}
         showFavoritesOnly={showFavoritesOnly} setShowFavoritesOnly={setShowFavoritesOnly}
-        onOpenFilterSort={() => {
-          console.log('Opening filter modal...');
-          setFilterModalVisible(true);
-        }}
+        onOpenFilterSort={() => setFilterModalVisible(true)}
         sortBy={sortBy}
         hasActiveFilters={hasActiveFilters}
       />
@@ -714,7 +661,7 @@ function SearchScreen() {
             showsMyLocationButton={true}
           >
             {filtered.map(pg => {
-              const imageUrl = pg.bildUrl || pg.imageUrl || FALLBACK_IMG;
+              const imageUrl = pg.resolvedImageUrl || pg.bildUrl || pg.imageUrl || FALLBACK_IMG;
               const payload = toPlaygroundPayload({ ...pg, bildUrl: imageUrl }, pg.id);
               const isSelected = selectedPlayground?.id === pg.id;
               
@@ -806,7 +753,6 @@ function SearchScreen() {
   );
 }
 
-// Static styles that don't need theme
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   cardContainer: { flex: 0.5, margin: 6, height: 200, borderRadius: 20, overflow: 'hidden', elevation: 3 },
@@ -823,106 +769,25 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, paddingBottom: 10 },
   filterBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   mapContainer: { flex: 1 },
-  playgroundInfoOverlay: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    zIndex: 1000,
-  },
-  playgroundInfoButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    paddingVertical: 16,
-    gap: 8
-  },
+  playgroundInfoOverlay: { position: 'absolute', bottom: 20, left: 20, right: 20, zIndex: 1000 },
+  playgroundInfoButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 8 },
   playgroundInfoButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 17 },
-  // Modal styles
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalBackdropTouchable: {
-    flex: 1,
-  },
-  modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  modalBody: {
-    padding: 20,
-  },
-  modalSection: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    marginBottom: 0,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    gap: 12,
-  },
-  optionText: {
-    fontSize: 15,
-    flex: 1,
-    fontWeight: '500',
-  },
-  resetButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 8,
-    marginTop: 8,
-  },
-  resetButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  modalFooter: {
-    padding: 20,
-    borderTopWidth: 1,
-  },
-  applyButton: {
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalBackdropTouchable: { flex: 1 },
+  modalContent: { borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold' },
+  modalBody: { padding: 20 },
+  modalSection: { marginBottom: 24 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, paddingBottom: 12, borderBottomWidth: 1, marginBottom: 0 },
+  sectionTitle: { fontSize: 16, fontWeight: 'bold' },
+  optionButton: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1, gap: 12 },
+  optionText: { fontSize: 15, flex: 1, fontWeight: '500' },
+  resetButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 14, borderRadius: 12, borderWidth: 1, gap: 8, marginTop: 8 },
+  resetButtonText: { fontSize: 15, fontWeight: '600' },
+  modalFooter: { padding: 20, borderTopWidth: 1 },
+  applyButton: { padding: 16, borderRadius: 12, alignItems: 'center' },
+  applyButtonText: { fontSize: 16, fontWeight: 'bold' },
 });
 
 export default SearchScreen;

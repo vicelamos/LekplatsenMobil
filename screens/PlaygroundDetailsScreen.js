@@ -28,7 +28,7 @@ import { parsePosition, calculateDistance, formatDistance } from '../utils/geo';
 
 // 🟢 Importera de nya gemensamma delarna
 import { CheckInCard } from '../src/components/CheckInCard';
-import { enrichFeed } from '../src/services/feedService';
+import { enrichFeed, getPlaygroundImage } from '../src/services/feedService';
 
 // Tema & UI
 import { useTheme, mapStyle } from '../src/theme';
@@ -245,13 +245,18 @@ export default function PlaygroundDetailsScreen({ route, navigation }) {
 
   const galleryImages = useMemo(() => {
     if (!playground) return [];
-    const images = [playground.imageUrl];
+    const images = [];
+    const isMissing = !playground.imageUrl || playground.imageUrl.includes('bild%20saknas');
+    if (!isMissing) images.push(playground.imageUrl);
     checkIns.forEach(ci => {
       const img = ci.incheckning?.bildUrl || ci.incheckning?.bild;
       if (img && !images.includes(img)) {
         images.push(img);
       }
     });
+    if (images.length === 0) {
+      images.push('https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f');
+    }
     return images;
   }, [playground, checkIns]);
 
@@ -285,6 +290,22 @@ export default function PlaygroundDetailsScreen({ route, navigation }) {
       }
     })();
   }, [userId]);
+
+  // Hämta fallback-bild från incheckningar om lekplatsen saknar egen bild
+useEffect(() => {
+  if (!playground) return;
+  const ownImage = playground.imageUrl || '';
+  const isMissing = !ownImage || ownImage.includes('bild%20saknas');
+  if (!isMissing) return; // har redan en bra bild, inget att göra
+
+  getPlaygroundImage({ id: playground.id, bildUrl: playground.imageUrl })
+    .then((resolvedUrl) => {
+      if (resolvedUrl && !resolvedUrl.includes('bild%20saknas')) {
+        setPlayground((prev) => prev ? { ...prev, imageUrl: resolvedUrl } : prev);
+      }
+    })
+    .catch(() => {});
+}, [playground?.id]);
 
   // Hämta användarens position och beräkna avstånd
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 /**
@@ -51,4 +51,60 @@ export const enrichFeed = async (checkInsData) => {
       lekplats: pgsMap[incheckning.lekplatsId],
     };
   });
+};
+
+const FALLBACK_IMG =
+  'https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f';
+
+/**
+ * Returnerar en bild-URL för en lekplats.
+ * Om lekplatsen saknar egen bild (eller bara har standardbilden), hämtas
+ * den senaste incheckningen med bild i stället.
+ * Faller slutligen tillbaka på FALLBACK_IMG.
+ */
+export const getPlaygroundImage = async (playground) => {
+  const ownImage = playground?.bildUrl || playground?.imageUrl || '';
+  const isMissingImage =
+    !ownImage || ownImage.includes('bild%20saknas') || ownImage.includes('bild saknas');
+
+  if (!isMissingImage) return ownImage;
+
+  // Försök hämta bild från senaste incheckning med bild
+  const pgId = playground?.id;
+  if (!pgId) return FALLBACK_IMG;
+
+  try {
+    const q = query(
+      collection(db, 'incheckningar'),
+      where('lekplatsId', '==', pgId),
+      orderBy('timestamp', 'desc'),
+      limit(10)
+    );
+    const snap = await getDocs(q);
+    for (const d of snap.docs) {
+      const bildUrl = d.data().bildUrl;
+      if (bildUrl && bildUrl.trim() !== '') {
+        return bildUrl;
+      }
+    }
+  } catch (e) {
+    console.warn('getPlaygroundImage: kunde inte hämta incheckningar', e);
+  }
+
+  return FALLBACK_IMG;
+};
+
+/**
+ * Berikar en lista med lekplatser med rätt bild-URL.
+ * Anropar getPlaygroundImage för varje lekplats parallellt.
+ */
+export const enrichPlaygroundsWithImages = async (playgrounds) => {
+  if (!playgrounds || playgrounds.length === 0) return playgrounds;
+  const withImages = await Promise.all(
+    playgrounds.map(async (pg) => {
+      const resolvedImage = await getPlaygroundImage(pg);
+      return { ...pg, resolvedImageUrl: resolvedImage };
+    })
+  );
+  return withImages;
 };

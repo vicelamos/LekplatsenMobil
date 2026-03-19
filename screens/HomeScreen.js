@@ -19,7 +19,7 @@ import * as Location from 'expo-location';
 
 // 🟢 Importera gemensamma komponenter och services
 import { CheckInCard } from '../src/components/CheckInCard';
-import { enrichFeed } from '../src/services/feedService'; // <-- NYTT
+import { enrichFeed, enrichPlaygroundsWithImages } from '../src/services/feedService';
 
 import { auth, db } from '../firebase';
 import {
@@ -58,7 +58,7 @@ const toPlaygroundPayload = (src = {}, fallbackId) => {
     name: src.namn || src.name || 'Lekplats',
     address: src.adress || src.address || '',
     description: src.beskrivning || src.description || '',
-    imageUrl: src.bildUrl || src.imageUrl || '',
+    imageUrl: src.resolvedImageUrl || src.bildUrl || src.imageUrl || '',
     equipment: src.utrustning || src.equipment || [],
     location,
   };
@@ -82,7 +82,10 @@ const chunk = (arr, size) => {
 const DiscoverCard = memo(({ item, userLocation }) => {
   const navigation = useNavigation();
   const { theme } = useTheme();
+
+  // Använd resolvedImageUrl om tillgänglig, annars bildUrl/imageUrl
   const imageUrl =
+    item.resolvedImageUrl ||
     item.bildUrl ||
     item.imageUrl ||
     'https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f';
@@ -181,7 +184,6 @@ export default function HomeScreen() {
     })();
   }, []);
 
-  // 🔄 fetchHomeScreenData använder nu enrichFeed-servicen
   const fetchHomeScreenData = async () => {
     if (!userId) return;
     setLoading(true);
@@ -193,7 +195,6 @@ export default function HomeScreen() {
       const currentUserData = userSnap.data();
       setUserData(currentUserData);
 
-      const visitedIds = currentUserData.visitedPlaygroundIds || [];
       const friendIds = currentUserData.friends || [];
 
       // Hämta lekplatser och sortera efter avstånd
@@ -204,7 +205,6 @@ export default function HomeScreen() {
       
       let discoverList = [];
       if (userLocation) {
-        // Beräkna avstånd för alla lekplatser
         const playgroundsWithDistance = allPlaygrounds
           .map(p => {
             const pos = parsePosition(p.position);
@@ -214,15 +214,15 @@ export default function HomeScreen() {
           })
           .filter(p => p !== null && p.distance !== null);
         
-        // Sortera efter avstånd och ta de 5 närmaste
         playgroundsWithDistance.sort((a, b) => a.distance - b.distance);
         discoverList = playgroundsWithDistance.slice(0, 5);
       } else {
-        // Fallback: visa slumpmässiga om vi inte har position
         discoverList = allPlaygrounds.slice(0, 5);
       }
-      
-      setDiscoverPlaygrounds(discoverList);
+
+      // 🟢 Berika lekplatser med bild från incheckningar om egen bild saknas
+      const enrichedDiscover = await enrichPlaygroundsWithImages(discoverList);
+      setDiscoverPlaygrounds(enrichedDiscover);
 
       const userAndFriendsIds = [...friendIds, userId];
       if (userAndFriendsIds.length === 0) {
@@ -257,7 +257,6 @@ export default function HomeScreen() {
       setLastVisible(lastDocForPaging);
       setHasMore(page.length === pageSize);
 
-      // 🟢 HÄR BERIKAR VI DATAN
       const finalFeed = await enrichFeed(page);
       setCheckInFeed(finalFeed);
     } catch (error) {
@@ -267,7 +266,6 @@ export default function HomeScreen() {
     }
   };
 
-  // 🔄 fetchMoreCheckIns använder nu också enrichFeed-servicen
   const fetchMoreCheckIns = async () => {
     if (loadingMore || !hasMore || !lastVisible) return;
     setLoadingMore(true);
@@ -300,7 +298,6 @@ export default function HomeScreen() {
       if (newLastDoc) setLastVisible(newLastDoc);
       setHasMore(page.length === pageSize);
 
-      // 🟢 BERIKA MER DATA
       const newFinalFeed = await enrichFeed(page);
       setCheckInFeed((prev) => [...prev, ...newFinalFeed]);
     } catch (error) {
