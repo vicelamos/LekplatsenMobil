@@ -25,9 +25,9 @@ import {
   addDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useTheme } from '../src/theme';
-import { Card } from '../src/ui';
+import { db } from '../../firebase';
+import { useTheme } from '../../src/theme';
+import { Card } from '../../src/ui';
 
 function ReviewDraftsScreen({ navigation }) {
   const { theme } = useTheme();
@@ -318,6 +318,13 @@ function ReviewDraftsScreen({ navigation }) {
               <Text style={styles.badgeText}>{suggestions.length}</Text>
             </View>
           )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('ManageSponsors')}
+          style={[styles.tab]}
+        >
+          <Text style={[styles.tabText]}>Sponsorer</Text>
         </TouchableOpacity>
       </View>
 

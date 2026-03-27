@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -8,39 +8,34 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import * as Notifications from 'expo-notifications';
-// permissions for notifications are handled by expo-notifications itself
-import { doc, setDoc } from 'firebase/firestore';
 
 // Tema
 import { ThemeProvider, useTheme } from './src/theme';
-
-// Konfigurera hur notifieringar visas när appen är i förgrunden
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+import { usePushNotifications, registerPushToken } from './src/hooks/usePushNotifications';
 
 // Skärmar
-import LoginScreen from './screens/LoginScreen';
-import HomeScreen from './screens/HomeScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import SearchScreen from './screens/SearchScreen'; 
-import TrophyScreen from './screens/TrophyScreen';
-import FriendsScreen from './screens/FriendsScreen';
-import CommentsScreen from './screens/CommentsScreen';
-import PlaygroundDetailsScreen from './screens/PlaygroundDetailsScreen';
-import AddPlaygroundScreen from './screens/AddPlaygroundScreen';
-import ReviewDraftsScreen from './screens/ReviewDraftsScreen';
-import CheckInScreen from './screens/CheckInScreen';
-import SignupScreen from './screens/SignupScreen';
-import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
-import NotificationsScreen from './screens/NotificationsScreen';
-import PublicProfileScreen from './screens/PublicProfileScreen';
+import LoginScreen from './screens/auth/LoginScreen';
+import SignupScreen from './screens/auth/SignupScreen';
+import ForgotPasswordScreen from './screens/auth/ForgotPasswordScreen';
+import HomeScreen from './screens/social/HomeScreen';
+import CheckInScreen from './screens/social/CheckInScreen';
+import EditCheckInScreen from './screens/social/EditCheckInScreen';
+import CommentsScreen from './screens/social/CommentsScreen';
+import FriendsScreen from './screens/social/FriendsScreen';
+import NotificationsScreen from './screens/social/NotificationsScreen';
+import SearchScreen from './screens/playground/SearchScreen';
+import PlaygroundDetailsScreen from './screens/playground/PlaygroundDetailsScreen';
+import AddPlaygroundScreen from './screens/playground/AddPlaygroundScreen';
+import ReviewDraftsScreen from './screens/playground/ReviewDraftsScreen';
+import ProfileScreen from './screens/profile/ProfileScreen';
+import EditProfileScreen from './screens/profile/EditProfileScreen';
+import PublicProfileScreen from './screens/profile/PublicProfileScreen';
+import MyCheckinsScreen from './screens/profile/MyCheckinsScreen';
+import MyVisitedPlaygroundsScreen from './screens/profile/MyVisitedPlaygroundsScreen';
+import TrophyScreen from './screens/profile/TrophyScreen';
+import ManageSponsorsScreen from './screens/admin/ManageSponsorsScreen';
+import AdminScreen from './screens/admin/AdminScreen';
+import ManageNewsScreen from './screens/admin/ManageNewsScreen';
 
 
 
@@ -68,6 +63,7 @@ function AppTabs({ navigation }) {
     });
     return unsub;
   }, [uid]);
+
 
   return (
     <Tab.Navigator
@@ -154,6 +150,7 @@ function AppTabs({ navigation }) {
           ),
         }}
       />
+
     </Tab.Navigator>
   );
 }
@@ -198,90 +195,16 @@ export default function App() {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState(null);
 
+  usePushNotifications(navigationRef);
+
   useEffect(() => {
-    const registerForPushNotificationsAsync = async (uid) => {
-      try {
-        // Be om tillstånd för push-notifieringar
-        let { status: existingStatus } = await Notifications.getPermissionsAsync();
-        if (existingStatus !== 'granted') {
-          const { status } = await Notifications.requestPermissionsAsync();
-          existingStatus = status;
-        }
-        if (existingStatus !== 'granted') {
-          console.log('Push-notifieringstillstånd nekades');
-          return;
-        }
-
-        // Hämta Expo push token
-        const token = (await Notifications.getExpoPushTokenAsync({
-          projectId: 'ea779f71-c184-4011-b809-4514ebcda658',
-        })).data;
-        console.log('Expo Push Token:', token);
-
-        // Spara token i Firestore
-        if (uid && token) {
-          const userRef = doc(db, 'users', uid);
-          await setDoc(userRef, { expoPushToken: token }, { merge: true });
-          console.log('Push token sparad i Firestore');
-        }
-
-        // Konfigurera för Android
-        if (Platform.OS === 'android') {
-          await Notifications.setNotificationChannelAsync('default', {
-            name: 'default',
-            importance: Notifications.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#4CAF50',
-          });
-        }
-      } catch (e) {
-        console.warn('Kunde inte registrera push-token:', e);
-      }
-    };
-
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      if (u) registerForPushNotificationsAsync(u.uid);
+      if (u) registerPushToken(u.uid);
       if (initializing) setInitializing(false);
     });
 
-    const receivedSub = Notifications.addNotificationReceivedListener(notification => {
-      console.log('Notis mottagen i förgrunden', notification);
-      // Notifikationen visas automatiskt tack vare setNotificationHandler ovan
-    });
-    
-    const responseSub = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Användaren öppnade notis', response);
-      const data = response.notification.request.content.data;
-      
-      // Hantera olika typer av notifikationer
-      if (data?.type === 'like' || data?.type === 'comment') {
-        if (data.checkinId) {
-          navigationRef.current?.navigate('Comments', { 
-            checkInId: data.checkinId,
-            checkInComment: '' 
-          });
-        }
-      } else if (data?.type === 'TROPHY') {
-        navigationRef.current?.navigate('Trophies');
-      } else if (data?.type === 'COMMENT' || data?.type === 'MENTION') {
-        // Hantera länkar från updateCommentCount-funktionen
-        const link = data.link || '';
-        const checkinMatch = link.match(/\/incheckning\/(.+)/);
-        if (checkinMatch) {
-          navigationRef.current?.navigate('Comments', { 
-            checkInId: checkinMatch[1],
-            checkInComment: '' 
-          });
-        }
-      }
-    });
-
-    return () => {
-      unsubscribe();
-      receivedSub.remove();
-      responseSub.remove();
-    };
+    return unsubscribe;
   }, [initializing]);
 
   if (initializing) {
@@ -324,15 +247,50 @@ export default function App() {
                 options={{ title: 'Profil' }}
               />
               <Stack.Screen
+                name="EditProfile"
+                component={EditProfileScreen}
+                options={{ title: 'Redigera profil' }}
+              />
+              <Stack.Screen
+                name="MyCheckins"
+                component={MyCheckinsScreen}
+                options={{ title: 'Mina incheckningar' }}
+              />
+              <Stack.Screen
+                name="MyVisitedPlaygrounds"
+                component={MyVisitedPlaygroundsScreen}
+                options={{ title: 'Besökta lekplatser' }}
+              />
+              <Stack.Screen
+                name="ManageSponsors"
+                component={ManageSponsorsScreen}
+                options={{ title: 'Sponsorer' }}
+              />
+              <Stack.Screen
+                name="ManageNews"
+                component={ManageNewsScreen}
+                options={{ title: 'Nyheter' }}
+              />
+              <Stack.Screen
+                name="Admin"
+                component={AdminScreen}
+                options={{ title: 'Administration' }}
+              />
+              <Stack.Screen
                 name="AddPlayground"
                 component={AddPlaygroundScreen}
                 options={{ title: 'Lägg till Lekplats' }}
               />
               <Stack.Screen
-               name="CheckIn" 
-               component={CheckInScreen} 
+               name="CheckIn"
+               component={CheckInScreen}
                options={{ title: 'Check In' }}
                />
+              <Stack.Screen
+                name="EditCheckin"
+                component={EditCheckInScreen}
+                options={{ title: 'Redigera incheckning' }}
+              />
               <Stack.Screen
                 name="ReviewDrafts"
                 component={ReviewDraftsScreen}

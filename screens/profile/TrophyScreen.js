@@ -11,14 +11,14 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth, db } from '../firebase';
+import { auth, db } from '../../firebase';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 // 🟢 Tema & UI
-import { useTheme } from '../src/theme';
-import { Card } from '../src/ui';
+import { useTheme } from '../../src/theme';
+import { Card } from '../../src/ui';
 
 // Hjälpfunktion för live-stat
 const getUserStatValue = (userProfile, statToTrack) => {

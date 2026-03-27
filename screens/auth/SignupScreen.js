@@ -14,15 +14,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 // Tema & UI-komponenter
-import { useTheme } from '../src/theme';
-import { Card, Button, Input, PatternBackground } from '../src/ui';
+import { useTheme } from '../../src/theme';
+import { Card, Button, Input, PatternBackground } from '../../src/ui';
 
 // Firebase
-import { auth, db } from '../firebase';
+import { auth, db } from '../../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 
-const hero = require('../assets/images/lekplatsen.png');
+const hero = require('../../assets/images/lekplatsen.png');
 
 export default function SignupScreen({ navigation }) {
   const { theme } = useTheme();

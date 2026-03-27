@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth, db } from '../firebase';
+import { auth, db } from '../../firebase';
 import {
   collection,
   query,
@@ -19,7 +19,7 @@ import {
   getDocs,
   writeBatch,
 } from 'firebase/firestore';
-import { useTheme } from '../src/theme';
+import { useTheme } from '../../src/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function NotificationsScreen({ navigation }) {
@@ -96,6 +96,8 @@ export default function NotificationsScreen({ navigation }) {
       case 'MENTION': iconName = 'at-outline'; break;
       case 'TROPHY': iconName = 'trophy-outline'; break;
       case 'LIKE': iconName = 'heart-outline'; break;
+      case 'FRIEND_REQUEST':
+      case 'FRIEND_REQUEST_ACCEPTED': iconName = 'person-add-outline'; break;
       default: iconName = 'notifications-outline';
     }
 
@@ -122,6 +124,8 @@ export default function NotificationsScreen({ navigation }) {
             if (lekplatsMatch) {
               navigation.navigate('PlaygroundDetails', { id: lekplatsMatch[1] });
             }
+          } else if (item.type === 'FRIEND_REQUEST' || item.type === 'FRIEND_REQUEST_ACCEPTED') {
+            navigation.navigate('Friends');
           } else if (item.type === 'TAG' || item.type === 'MENTION') {
             const checkinMatch = link.match(/\/incheckning\/(.+)/);
             if (checkinMatch) {

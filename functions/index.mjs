@@ -150,12 +150,14 @@ export const updateCommentCount = onDocumentWritten(
         }));
       }
 
-      // check for @mentions in text
+      // check for @mentions in text (max 5 unika mentions per kommentar)
+      const MAX_MENTIONS = 5;
       const mentionRegex = /@([\wåäöÅÄÖ0-9_-]+)/g;
       const mentioned = new Set();
       let m;
       while ((m = mentionRegex.exec(commentText)) !== null) {
         mentioned.add(m[1]);
+        if (mentioned.size >= MAX_MENTIONS) break;
       }
       if (mentioned.size > 0) {
         // fetch corresponding users by nickname
@@ -420,6 +422,82 @@ export const onCheckInCreateSendNotificationToTagged = onDocumentCreated("inchec
   }
 });
 
+// ---------- VÄNFÖRFRÅGNINGAR ----------
+
+/**
+ * FUNKTION: Notifiera mottagaren när en vänförfrågan skickas
+ */
+export const onFriendRequestCreated = onDocumentCreated(
+  "friendRequests/{requestId}",
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return null;
+
+    const data = snap.data();
+    if (data.status !== "pending") return null;
+
+    const { fromUserId, toUserId } = data;
+    if (!fromUserId || !toUserId) return null;
+
+    try {
+      const fromUserDoc = await db.collection("users").doc(fromUserId).get();
+      const smeknamn = fromUserDoc.data()?.smeknamn || "Någon";
+
+      const notifRef = db.collection("users").doc(toUserId).collection("notifications").doc();
+      await notifRef.set({
+        type: "FRIEND_REQUEST",
+        title: "Ny vänförfrågan",
+        message: `${smeknamn} vill bli din vän!`,
+        read: false,
+        createdAt: FieldValue.serverTimestamp(),
+        link: "FriendsScreen",
+      });
+
+      logger.info(`Vänförfrågan-notis skickad från ${fromUserId} till ${toUserId}`);
+    } catch (e) {
+      logger.error("Fel vid vänförfrågan-notis:", e);
+    }
+    return null;
+  }
+);
+
+/**
+ * FUNKTION: Notifiera avsändaren när en vänförfrågan accepteras
+ */
+export const onFriendRequestAccepted = onDocumentUpdated(
+  "friendRequests/{requestId}",
+  async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+
+    if (before.status === after.status) return null;
+    if (after.status !== "accepted") return null;
+
+    const { fromUserId, toUserId } = after;
+    if (!fromUserId || !toUserId) return null;
+
+    try {
+      const toUserDoc = await db.collection("users").doc(toUserId).get();
+      const smeknamn = toUserDoc.data()?.smeknamn || "Någon";
+
+      const notifRef = db.collection("users").doc(fromUserId).collection("notifications").doc();
+      await notifRef.set({
+        type: "FRIEND_REQUEST_ACCEPTED",
+        title: "Vänförfrågan accepterad!",
+        message: `${smeknamn} accepterade din vänförfrågan.`,
+        read: false,
+        createdAt: FieldValue.serverTimestamp(),
+        link: "FriendsScreen",
+      });
+
+      logger.info(`Accept-notis skickad till ${fromUserId} (accepterad av ${toUserId})`);
+    } catch (e) {
+      logger.error("Fel vid accept-notis:", e);
+    }
+    return null;
+  }
+);
+
 // ---------- ADMIN-NOTISER VID NY REVIEW-LEKPLATS ----------
 
 /**
@@ -496,5 +574,38 @@ export const notifyAdminsOnSuggestion = onDocumentCreated(
     } catch (e) {
       logger.error("Fel vid admin-notis (ändringsförslag):", e);
     }
+  }
+);
+
+/**
+ * FUNKTION: Aggregera sponsor-analytik till totals
+ * Triggas när ett dagsdokument i sponsors/{id}/stats/{datum} skrivs.
+ * Räknar ut delta mot föregående värde och uppdaterar totalStats på sponsor-dokumentet.
+ */
+export const aggregateSponsorStats = onDocumentWritten(
+  "sponsors/{sponsorId}/stats/{date}",
+  async (event) => {
+    const sponsorId = event.params.sponsorId;
+    const after = event.data.after?.data() || {};
+    const before = event.data.before?.data() || {};
+
+    const fields = ["badgeImpressions", "popupOpens", "hittaHitClicks", "websiteClicks"];
+    const delta = {};
+    for (const field of fields) {
+      const diff = (after[field] || 0) - (before[field] || 0);
+      if (diff !== 0) {
+        delta[`totalStats.${field}`] = FieldValue.increment(diff);
+      }
+    }
+
+    if (Object.keys(delta).length === 0) return null;
+
+    try {
+      await db.collection("sponsors").doc(sponsorId).update(delta);
+      logger.info(`Uppdaterade totalStats för sponsor ${sponsorId}`);
+    } catch (e) {
+      logger.error(`Fel vid aggregering av sponsor-statistik (${sponsorId}):`, e);
+    }
+    return null;
   }
 );

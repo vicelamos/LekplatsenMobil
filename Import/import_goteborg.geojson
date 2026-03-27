@@ -1,0 +1,134 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.987113952636719,
+          57.75350344176108
+        ]
+      },
+      "properties": {
+        "id": "5594",
+        "name": "Akkas gata",
+        "beskrivning": "Lekplatsen ligger i närheten av Selma Lagerlöfs torg, omgiven av stora gröna ytor och bostadshus. Lekplatsen är inspirerad av Selma Lagerlöfs historia om Nils Holgerssons underbara resa.",
+        "lekutbud": [
+          "Sandlåda",
+          "Rutschkana",
+          "Bollplan",
+          "Kompisgunga",
+          "Klätterlek",
+          "Hinderbana"
+        ],
+        "bildUrl": "https://s3.eu-north-1.amazonaws.com/gbg.serviceguiden/61e0a235cfc4d247cca955fb_620ce4918647ce158fc356a7_large.jpg",
+        "address": "",
+        "sourceUrl": "https://goteborg.se/wps/portal/start/uppleva-och-gora/parker-och-lekplatser/lekplatser/hitta-lekplatser?id=5594"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.923702572818646,
+          57.69485749632614
+        ]
+      },
+      "properties": {
+        "id": "3962",
+        "name": "Amiralitetsgatan",
+        "beskrivning": "Lekplatsen ligger i liten park mellan Amiralitetsgatan, Tellgrensgatan och Mariebergsgatan. På sommaren finns där en vattenlek som drivs av förskolan på gatan.",
+        "lekutbud": [
+          "Övriga gungor",
+          "Vattenlek"
+        ],
+        "bildUrl": "https://s3.eu-north-1.amazonaws.com/gbg.serviceguiden/61e0a23acfc4d247cca958d7_620ce5e78647ce158fc3745a_large.jpg",
+        "address": "",
+        "sourceUrl": "https://goteborg.se/wps/portal/start/uppleva-och-gora/parker-och-lekplatser/lekplatser/hitta-lekplatser?id=3962"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.054212093353273,
+          57.79572257765315
+        ]
+      },
+      "properties": {
+        "id": "5355",
+        "name": "Angeredsparken",
+        "beskrivning": "I Angereds stadspark, mellan köpcentrat vid Angereds centrum och Angered Arena, hittar du Göteborgs tredje utflyktslekplats. Den har cirkustema, både vad gäller färg, form och lekredskap. I parken finns även grillplatser, bouleplan, sittplatser, grillplats, stora gräsmattor samt utegym och andra aktiviteter.",
+        "lekutbud": [
+          "Bebisgunga",
+          "Övriga gungor",
+          "Vattenlek",
+          "Sandlåda",
+          "Rutschkana",
+          "Utflyktslekplats",
+          "Studsmatta",
+          "Kompisgunga",
+          "Klätterlek"
+        ],
+        "bildUrl": "https://s3.eu-north-1.amazonaws.com/gbg.serviceguiden/61e0a23dcfc4d247cca95a4e_621735f0853b2a7b0a35fda7_large.jpg",
+        "address": "",
+        "sourceUrl": "https://goteborg.se/wps/portal/start/uppleva-och-gora/parker-och-lekplatser/lekplatser/hitta-lekplatser?id=5355"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.892200915611271,
+          57.62482568970164
+        ]
+      },
+      "properties": {
+        "id": "3870",
+        "name": "Annikas Gata",
+        "beskrivning": "Lekplatsen ligger i anslutning till Näsetskolan.",
+        "lekutbud": [
+          "Sandlåda",
+          "Rutschkana",
+          "Bebisgunga",
+          "Övriga gungor",
+          "Kompisgunga",
+          "Klätterlek",
+          "Hinderbana"
+        ],
+        "bildUrl": "https://s3.eu-north-1.amazonaws.com/gbg.serviceguiden/61e0a23fcfc4d247cca95bac_668fe98c1fe1202e0d6bef29_large.jpg",
+        "address": "",
+        "sourceUrl": "https://goteborg.se/wps/portal/start/uppleva-och-gora/parker-och-lekplatser/lekplatser/hitta-lekplatser?id=3870"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.913484289067952,
+          57.71854620155435
+        ]
+      },
+      "properties": {
+        "id": "6791",
+        "name": "Arbogagatan",
+        "beskrivning": "Lekplatsen Arbogagatan (lekplats 123) ligger i Lundby.",
+        "lekutbud": [
+          "Sandlåda",
+          "Rutschkana",
+          "Bebisgunga",
+          "Övriga gungor",
+          "Klätterlek"
+        ],
+        "bildUrl": "https://s3.eu-north-1.amazonaws.com/gbg.serviceguiden/61e0a241cfc4d247cca95d59_6214f24a8647ce158f927308_large.jpg",
+        "address": "",
+        "sourceUrl": "https://goteborg.se/wps/portal/start/uppleva-och-gora/parker-och-lekplatser/lekplatser/hitta-lekplatser?id=6791"
+      }
+    }
+  ]
+}

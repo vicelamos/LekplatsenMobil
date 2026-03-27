@@ -22,18 +22,19 @@ import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Location from 'expo-location';
-import { auth, db } from '../firebase';
+import { auth, db } from '../../firebase';
 import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, updateDoc, arrayUnion, arrayRemove, addDoc, serverTimestamp } from 'firebase/firestore';
-import { parsePosition, calculateDistance, formatDistance } from '../utils/geo';
+import { parsePosition, calculateDistance, formatDistance } from '../../utils/geo';
+import { trackSponsorEvent } from '../../utils/sponsorAnalytics';
 
 // 🟢 Importera de nya gemensamma delarna
-import { CheckInCard } from '../src/components/CheckInCard';
-import { enrichFeed, getPlaygroundImage } from '../src/services/feedService';
+import { CheckInCard } from '../../src/components/CheckInCard';
+import { enrichFeed, getPlaygroundImage } from '../../src/services/feedService';
 
 // Tema & UI
-import { useTheme, mapStyle } from '../src/theme';
-import { Card, Chip } from '../src/ui';
-import FullscreenImageModal from '../src/components/FullscreenImageModal';
+import { useTheme, mapStyle } from '../../src/theme';
+import { Card, Chip } from '../../src/ui';
+import FullscreenImageModal from '../../src/components/FullscreenImageModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -50,6 +51,7 @@ const normalizePlayground = (src = {}, fallbackId) => {
   const utmaningar = Array.isArray(src.utmaningar) ? src.utmaningar : [];
   const equipment = Array.isArray(src.utrustning) ? src.utrustning : [];
   const faciliteter = Array.isArray(src.faciliteter) ? src.faciliteter : [];
+  const bilder = Array.isArray(src.bilder) ? src.bilder : (imageUrl && !imageUrl.includes('bild%20saknas') ? [imageUrl] : []);
   const snittbetyg = typeof src.snittbetyg === 'number' ? src.snittbetyg : 0;
   const incheckningarCount =
     typeof src.antalIncheckningar === 'number'
@@ -74,6 +76,7 @@ const normalizePlayground = (src = {}, fallbackId) => {
     kommun,
     description,
     imageUrl,
+    bilder,
     equipment,
     utmaningar,
     faciliteter,
@@ -81,6 +84,7 @@ const normalizePlayground = (src = {}, fallbackId) => {
     incheckningarCount,
     location,
     status: src.status || 'publicerad',
+    sponsorship: src.sponsorship || null,
   };
 };
 
@@ -93,14 +97,21 @@ const mergeNormalized = (localObj, fetchedObj) => {
     address: fetchedObj.address || localObj.address,
     kommun: fetchedObj.kommun || localObj.kommun,
     description: fetchedObj.description || localObj.description,
-    imageUrl: fetchedObj.imageUrl || localObj.imageUrl,
+    imageUrl: (() => {
+      const isFallback = (u) => !u || u.includes('bild%20saknas');
+      if (!isFallback(fetchedObj.imageUrl)) return fetchedObj.imageUrl;
+      if (!isFallback(localObj.imageUrl)) return localObj.imageUrl;
+      return fetchedObj.imageUrl;
+    })(),
     utmaningar: (fetchedObj.utmaningar?.length ? fetchedObj.utmaningar : localObj.utmaningar) || [],
     equipment: (fetchedObj.equipment?.length ? fetchedObj.equipment : localObj.equipment) || [],
     faciliteter: (fetchedObj.faciliteter?.length ? fetchedObj.faciliteter : localObj.faciliteter) || [],
+    bilder: (fetchedObj.bilder?.length ? fetchedObj.bilder : localObj.bilder) || [],
     snittbetyg: (fetchedObj.snittbetyg ?? localObj.snittbetyg) ?? 0,
     incheckningarCount: (fetchedObj.incheckningarCount ?? localObj.incheckningarCount) ?? 0,
     location: fetchedObj.location || localObj.location || null,
     status: fetchedObj.status || localObj.status || 'publicerad',
+    sponsorship: fetchedObj.sponsorship || localObj.sponsorship || null,
   };
 };
 
@@ -180,6 +191,8 @@ export default function PlaygroundDetailsScreen({ route, navigation }) {
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [sponsor, setSponsor] = useState(null); // null = ingen sponsor
+  const [sponsorPopup, setSponsorPopup] = useState(false);
   const [checkIns, setCheckIns] = useState([]);
   const [loadingCheckins, setLoadingCheckins] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
@@ -246,13 +259,17 @@ export default function PlaygroundDetailsScreen({ route, navigation }) {
   const galleryImages = useMemo(() => {
     if (!playground) return [];
     const images = [];
-    const isMissing = !playground.imageUrl || playground.imageUrl.includes('bild%20saknas');
-    if (!isMissing) images.push(playground.imageUrl);
+    // Lägg till lekplatsens egna bilder (bilder-array tar prioritet)
+    if (playground.bilder?.length > 0) {
+      playground.bilder.forEach(url => { if (url && !images.includes(url)) images.push(url); });
+    } else {
+      const isMissing = !playground.imageUrl || playground.imageUrl.includes('bild%20saknas');
+      if (!isMissing) images.push(playground.imageUrl);
+    }
+    // Lägg till bilder från incheckningar
     checkIns.forEach(ci => {
       const img = ci.incheckning?.bildUrl || ci.incheckning?.bild;
-      if (img && !images.includes(img)) {
-        images.push(img);
-      }
+      if (img && !images.includes(img)) images.push(img);
     });
     if (images.length === 0) {
       images.push('https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f');
@@ -337,6 +354,16 @@ useEffect(() => {
     navigation.setOptions({ title: playground?.name ?? 'Lekplats' });
   }, [navigation, playground?.name]);
 
+  // Hämta sponsor för silver/guld
+  useEffect(() => {
+    const sp = playground?.sponsorship;
+    if (!sp?.active || !sp?.sponsorId) { setSponsor(null); return; }
+    if (sp.level !== 'silver' && sp.level !== 'guld') { setSponsor(null); return; }
+    getDoc(doc(db, 'sponsors', sp.sponsorId))
+      .then(snap => setSponsor(snap.exists() ? { id: snap.id, ...snap.data() } : null))
+      .catch(() => setSponsor(null));
+  }, [playground?.sponsorship]);
+
   useEffect(() => {
     const load = async () => {
       const pid = playground?.id ?? playgroundId;
@@ -368,8 +395,8 @@ useEffect(() => {
     const name = playground?.name ?? 'Lekplats';
     if (!lat || !lng) return;
     const url = Platform.select({
-      ios: `http://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(name)}`,
-      android: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
+      ios: `http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`,
+      android: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`,
     });
     Linking.openURL(url);
   };
@@ -550,6 +577,33 @@ useEffect(() => {
             </View>
           ) : null}
           
+          {sponsor && (
+            <TouchableOpacity
+              onPress={() => { setSponsorPopup(true); trackSponsorEvent(sponsor.id, 'popupOpens'); }}
+              activeOpacity={0.7}
+              style={{
+                marginTop: theme.space.sm,
+                paddingTop: theme.space.sm,
+                borderTopWidth: 1,
+                borderTopColor: theme.colors.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: theme.space.sm,
+              }}
+            >
+              <Text style={{ fontSize: 12, color: theme.colors.textMuted }}>I samarbete med</Text>
+              {sponsor.logoUrl ? (
+                <Image
+                  source={{ uri: sponsor.logoUrl }}
+                  style={{ height: 28, width: 80, borderRadius: theme.radius.sm }}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Text style={{ fontSize: 12, fontWeight: '700', color: theme.colors.text }}>{sponsor.name}</Text>
+              )}
+            </TouchableOpacity>
+          )}
+
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: theme.space.sm }}>
             <Text style={{ color: theme.colors.textMuted }}>{playground.kommun}</Text>
           </View>
@@ -561,6 +615,10 @@ useEffect(() => {
 
         <Accordion title="Utrustning">
           <TagList data={playground.equipment} iconName="construct-outline" emptyText="Ingen utrustning angiven." />
+        </Accordion>
+
+        <Accordion title="Faciliteter">
+          <TagList data={playground.faciliteter} iconName="cafe-outline" emptyText="Inga faciliteter angivna." />
         </Accordion>
 
         {region && (
@@ -674,6 +732,68 @@ useEffect(() => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Sponsor-popup */}
+      {sponsor && (
+        <Modal visible={sponsorPopup} transparent animationType="fade">
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24 }}
+            activeOpacity={1}
+            onPress={() => setSponsorPopup(false)}
+          >
+            <TouchableOpacity activeOpacity={1} onPress={() => {}}
+              style={{ backgroundColor: theme.colors.cardBg, borderRadius: 24, padding: 28, width: '100%', alignItems: 'center', borderWidth: 3, borderColor: theme.colors.primary }}
+            >
+              <Text style={{ fontSize: 18, fontWeight: '800', color: theme.colors.text, textAlign: 'center', marginBottom: 4 }}>
+                {playground.name}
+              </Text>
+              <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginBottom: 16, letterSpacing: 1, textTransform: 'uppercase' }}>
+                Sponsrad av
+              </Text>
+              <Text style={{ fontSize: 22, fontWeight: '800', color: theme.colors.text, textAlign: 'center', marginBottom: 16 }}>
+                {sponsor.name}
+              </Text>
+              {sponsor.logoUrl ? (
+                <Image source={{ uri: sponsor.logoUrl }} style={{ width: 220, height: 120, borderRadius: 14, marginBottom: 16 }} resizeMode="contain" />
+              ) : null}
+              {sponsor.description ? (
+                <Text style={{ color: theme.colors.textMuted, textAlign: 'center', fontSize: 14, marginBottom: 12 }}>
+                  {sponsor.description}
+                </Text>
+              ) : null}
+              {sponsor.address ? (
+                <TouchableOpacity
+                  onPress={() => { trackSponsorEvent(sponsor.id, 'hittaHitClicks'); Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(sponsor.address)}`); }}
+                  style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                >
+                  <Ionicons name="navigate-outline" size={18} color={theme.colors.primary} />
+                  <Text style={{ color: theme.colors.primary, fontWeight: '600', fontSize: 16 }}>Hitta hit</Text>
+                </TouchableOpacity>
+              ) : null}
+              {sponsor.website ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    const url = sponsor.website.startsWith('http') ? sponsor.website : `https://${sponsor.website}`;
+                    trackSponsorEvent(sponsor.id, 'websiteClicks');
+                    Linking.openURL(url);
+                  }}
+                  style={{ marginBottom: 12 }}
+                >
+                  <Text style={{ color: theme.colors.link, fontSize: 13, textDecorationLine: 'underline' }}>
+                    {sponsor.website}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+              <TouchableOpacity
+                onPress={() => setSponsorPopup(false)}
+                style={{ height: 50, width: '100%', borderRadius: 14, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center', marginTop: 8 }}
+              >
+                <Text style={{ color: theme.colors.primaryTextOn, fontWeight: '800', fontSize: 16 }}>Stäng</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+      )}
 
       <View style={[styles.fixedFooter, { backgroundColor: theme.colors.bg }]}>
         <TouchableOpacity

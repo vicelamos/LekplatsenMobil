@@ -20,9 +20,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { File } from 'expo-file-system';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
-import { compressImage, getReadableFileSize } from '../utils/imageCompression';
+import { compressImage, getReadableFileSize } from '../../utils/imageCompression';
 
-import { auth, db, storage } from '../firebase';
+import { auth, db, storage } from '../../firebase';
 import {
   doc,
   getDoc,
@@ -36,8 +36,8 @@ import {
 import { ref, getDownloadURL } from 'firebase/storage';
 
 // 🟢 Tema & UI
-import { useTheme, mapStyle } from '../src/theme';
-import { Card } from '../src/ui';
+import { useTheme, mapStyle } from '../../src/theme';
+import { Card } from '../../src/ui';
 
 /* -------------------------------------------------------------------------- */
 /* Komponenter                                                                */
@@ -89,8 +89,9 @@ export default function AddPlaygroundScreen({ route, navigation }) {
   const [adress, setAdress] = useState('');
   const [kommun, setKommun] = useState('');
   const [beskrivning, setBeskrivning] = useState('');
-  const [bildUrl, setBildUrl] = useState('');
-  const [localImage, setLocalImage] = useState(null);
+  // allImages: Array<{ uri?: string, url?: string, isNew: boolean }>
+  // isNew=true → lokal fil som ska laddas upp; isNew=false → redan uppladdad URL
+  const [allImages, setAllImages] = useState([]);
   const [status, setStatus] = useState('publicerad');
 
   // Alternativ från konfiguration/alternativ
@@ -170,8 +171,12 @@ export default function AddPlaygroundScreen({ route, navigation }) {
             setAdress(d.adress || d.address || '');
             setKommun(d.kommun || '');
             setBeskrivning(d.beskrivning || d.description || '');
-            setBildUrl(d.bildUrl || d.imageUrl || '');
             setStatus(d.status || 'publicerad');
+            // Ladda befintliga bilder: ta från bilder-array, annars från bildUrl
+            const existingUrls = Array.isArray(d.bilder) && d.bilder.length > 0
+              ? d.bilder
+              : (d.bildUrl || d.imageUrl ? [d.bildUrl || d.imageUrl] : []);
+            setAllImages(existingUrls.map(url => ({ url, isNew: false })));
             setFaciliteter(Array.isArray(d.faciliteter) ? d.faciliteter : []);
             setUtrustning(Array.isArray(d.utrustning) ? d.utrustning : []);
             setUtmaningar(Array.isArray(d.utmaningar) ? d.utmaningar : []);
@@ -291,7 +296,7 @@ export default function AddPlaygroundScreen({ route, navigation }) {
         maxHeight: 1200,
         quality: 0.75,
       });
-      setLocalImage(compressedUri);
+      setAllImages(prev => [...prev, { uri: compressedUri, isNew: true }]);
     }
   };
 
@@ -311,31 +316,32 @@ export default function AddPlaygroundScreen({ route, navigation }) {
         maxHeight: 1200,
         quality: 0.75,
       });
-      setLocalImage(compressedUri);
+      setAllImages(prev => [...prev, { uri: compressedUri, isNew: true }]);
     }
   };
 
-  const uploadImageIfAny = async (docId) => {
-    if (!localImage) return '';
-    console.log('AddPlaygroundScreen: startar uppladdning', { docId, localImage });
+  // Laddar upp alla nya (lokala) bilder och returnerar array med alla URLs (gamla + nya)
+  const uploadAllNewImages = async (docId) => {
+    const newImages = allImages.filter(img => img.isNew);
+    if (newImages.length === 0) return allImages.map(img => img.url).filter(Boolean);
     try {
       setUploading(true);
-      const file = new File(localImage);
-      const base64Data = await file.base64();
-      const fileSize = getReadableFileSize(base64Data);
-      console.log('AddPlaygroundScreen: Laddar upp bild', { size: fileSize, length: base64Data.length });
-      const ext = 'jpg';
-      const path = `images/playgrounds/${docId}/${Date.now()}.${ext}`;
-      const storageRef = ref(storage, path);
-      await uploadBase64(storageRef, base64Data);
-      console.log('AddPlaygroundScreen: upload lyckades', path);
-      const url = await getDownloadURL(storageRef);
-      console.log('AddPlaygroundScreen: downloadURL', url);
-      return url;
+      const uploadedUrls = await Promise.all(
+        newImages.map(async (img) => {
+          const file = new File(img.uri);
+          const base64Data = await file.base64();
+          const path = `images/playgrounds/${docId}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+          const storageRef = ref(storage, path);
+          await uploadBase64(storageRef, base64Data);
+          return await getDownloadURL(storageRef);
+        })
+      );
+      const existingUrls = allImages.filter(img => !img.isNew).map(img => img.url).filter(Boolean);
+      return [...existingUrls, ...uploadedUrls];
     } catch (e) {
       console.error('AddPlaygroundScreen: Uppladdning misslyckades:', e);
       Alert.alert('Fel', 'Kunde inte ladda upp bilden. Försök igen.');
-      return '';
+      return allImages.filter(img => !img.isNew).map(img => img.url).filter(Boolean);
     } finally {
       setUploading(false);
     }
@@ -376,7 +382,6 @@ export default function AddPlaygroundScreen({ route, navigation }) {
         adress: adress.trim(),
         kommun: kommun.trim(),
         beskrivning: beskrivning.trim(),
-        bildUrl: bildUrl || '',
         faciliteter,
         utmaningar,
         utrustning,
@@ -388,13 +393,12 @@ export default function AddPlaygroundScreen({ route, navigation }) {
 
       if (playgroundId) {
         await setDoc(doc(db, 'lekplatser', playgroundId), baseData, { merge: true });
-        if (localImage) {
-          const url = await uploadImageIfAny(playgroundId);
-          if (url) {
-            await updateDoc(doc(db, 'lekplatser', playgroundId), { bildUrl: url });
-            setBildUrl(url);
-          }
-        }
+        const finalUrls = await uploadAllNewImages(playgroundId);
+        await updateDoc(doc(db, 'lekplatser', playgroundId), {
+          bilder: finalUrls,
+          bildUrl: finalUrls[0] || '',
+        });
+        setAllImages(finalUrls.map(url => ({ url, isNew: false })));
         Alert.alert('Sparat', 'Lekplatsen har uppdaterats.');
         navigation.goBack?.();
       } else {
@@ -405,15 +409,12 @@ export default function AddPlaygroundScreen({ route, navigation }) {
           antalIncheckningar: 0,
           createdAt: serverTimestamp(),
         });
-        if (localImage) {
-          const url = await uploadImageIfAny(created.id);
-          console.log('AddPlaygroundScreen: uploadImageIfAny returnerade', url);
-          if (url) {
-            await updateDoc(doc(db, 'lekplatser', created.id), { bildUrl: url });
-            setBildUrl(url);
-          } else {
-            Alert.alert('Fel', 'Bilden laddades inte upp men lekplatsen skapades.');
-          }
+        const finalUrls = await uploadAllNewImages(created.id);
+        if (finalUrls.length > 0) {
+          await updateDoc(doc(db, 'lekplatser', created.id), {
+            bilder: finalUrls,
+            bildUrl: finalUrls[0] || '',
+          });
         }
         if (isAdmin) {
           Alert.alert('Skapad', 'Lekplatsen är skapad och publicerad.');
@@ -570,43 +571,43 @@ export default function AddPlaygroundScreen({ route, navigation }) {
           )}
         </Card>
 
-        {/* BILD */}
+        {/* BILDER */}
         <Card style={{ padding: theme.space.md, marginTop: theme.space.sm }}>
-          <Text style={styles.label}>Bild (valfritt)</Text>
-          {localImage ? (
-            <Image source={{ uri: localImage }} style={styles.preview} />
-          ) : bildUrl ? (
-            <Image source={{ uri: bildUrl }} style={styles.preview} />
-          ) : (
-            <View style={styles.previewPlaceholder}>
-              <Text style={{ color: theme.colors.textMuted }}>Ingen bild</Text>
-            </View>
-          )}
-          <View style={{ flexDirection: 'row', gap: theme.space.sm, marginTop: theme.space.xs }}>
+          <Text style={styles.label}>Bilder (valfritt)</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+            {allImages.map((img, index) => (
+              <View key={index} style={{ position: 'relative' }}>
+                <Image
+                  source={{ uri: img.uri || img.url }}
+                  style={{ width: 110, height: 110, borderRadius: theme.radius.md, backgroundColor: theme.colors.bgSoft }}
+                />
+                <TouchableOpacity
+                  onPress={() => setAllImages(prev => prev.filter((_, i) => i !== index))}
+                  style={{ position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 12, padding: 2 }}
+                >
+                  <Ionicons name="close" size={16} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            ))}
             <TouchableOpacity
               onPress={pickImage}
-              style={[
-                styles.btn(theme),
-                { backgroundColor: theme.colors.card, borderColor: theme.colors.text },
-              ]}
+              style={{ width: 110, height: 110, borderRadius: theme.radius.md, borderWidth: 1.5, borderColor: theme.colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.bgSoft, gap: 4 }}
             >
-              <Ionicons name="images-outline" size={16} color={theme.colors.text} />
-              <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Galleri</Text>
+              <Ionicons name="add" size={28} color={theme.colors.textMuted} />
+              <Text style={{ color: theme.colors.textMuted, fontSize: 11 }}>Galleri</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={takePhoto}
-              style={[
-                styles.btn(theme),
-                { backgroundColor: theme.colors.card, borderColor: theme.colors.text },
-              ]}
+              style={{ width: 110, height: 110, borderRadius: theme.radius.md, borderWidth: 1.5, borderColor: theme.colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.bgSoft, gap: 4 }}
             >
-              <Ionicons name="camera-outline" size={16} color={theme.colors.text} />
-              <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Kamera</Text>
+              <Ionicons name="camera-outline" size={24} color={theme.colors.textMuted} />
+              <Text style={{ color: theme.colors.textMuted, fontSize: 11 }}>Kamera</Text>
             </TouchableOpacity>
-          </View>
-          {uploading ? (
-            <Text style={styles.infoMuted}>Laddar upp…</Text>
-          ) : null}
+          </ScrollView>
+          {uploading && <Text style={styles.infoMuted}>Laddar upp…</Text>}
+          {allImages.length > 0 && (
+            <Text style={styles.infoMuted}>{allImages.length} bild{allImages.length !== 1 ? 'er' : ''} valda</Text>
+          )}
         </Card>
 
         {/* FACILITETER */}
@@ -648,23 +649,47 @@ export default function AddPlaygroundScreen({ route, navigation }) {
         </Card>
 
         {/* UTMANINGAR */}
-        <Card style={{ padding: theme.space.md, marginTop: theme.space.sm }}>
-          <Text style={styles.label}>Utmaningar</Text>
-          {optUtmaningar.length === 0 ? (
-            <Text style={styles.infoMuted}>Inga alternativ hittades i konfiguration.</Text>
-          ) : (
-            <View style={styles.chipsWrap}>
-              {optUtmaningar.map((opt) => (
-                <SelectableChip
-                  key={opt}
-                  label={opt}
-                  selected={utmaningar.includes(opt)}
-                  onPress={() => toggleFromArray(opt, utmaningar, setUtmaningar)}
-                />
-              ))}
-            </View>
-          )}
-        </Card>
+<Card style={{ padding: theme.space.md, marginTop: theme.space.sm }}>
+  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: theme.space.xs }}>
+    <Text style={styles.label}>Utmaningar</Text>
+    {optUtmaningar.length >= 3 && (
+      <TouchableOpacity
+        onPress={() => {
+          const shuffled = [...optUtmaningar].sort(() => Math.random() - 0.5);
+          setUtmaningar(shuffled.slice(0, 3));
+        }}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          backgroundColor: theme.colors.primarySoft,
+          paddingHorizontal: 10,
+          paddingVertical: 6,
+          borderRadius: theme.radius.md,
+        }}
+      >
+        <Ionicons name="shuffle" size={16} color={theme.colors.primaryStrong} />
+        <Text style={{ color: theme.colors.primaryStrong, fontWeight: '700', fontSize: 13 }}>
+          Slumpa 3
+        </Text>
+      </TouchableOpacity>
+    )}
+  </View>
+  {optUtmaningar.length === 0 ? (
+    <Text style={styles.infoMuted}>Inga alternativ hittades i konfiguration.</Text>
+  ) : (
+    <View style={styles.chipsWrap}>
+      {optUtmaningar.map((opt) => (
+        <SelectableChip
+          key={opt}
+          label={opt}
+          selected={utmaningar.includes(opt)}
+          onPress={() => toggleFromArray(opt, utmaningar, setUtmaningar)}
+        />
+      ))}
+    </View>
+  )}
+</Card>
 
         {/* INFO FÖR ICKE-ADMIN */}
         {!isAdmin && !playgroundId && (

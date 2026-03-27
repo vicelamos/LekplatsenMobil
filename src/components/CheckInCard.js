@@ -131,6 +131,14 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
             <Ionicons name="chatbubble-outline" size={18} color={theme.colors.textMuted} />
             <Text style={[styles.statText, { color: theme.colors.textMuted }]}>{item.commentCount || 0}</Text>
           </TouchableOpacity>
+          {item.userId === userId && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EditCheckin', { checkInId: item.id, checkIn: item })}
+              style={styles.statItem}
+            >
+              <Ionicons name="pencil-outline" size={16} color={theme.colors.textMuted} />
+            </TouchableOpacity>
+          )}
         </View>
         <Text style={[styles.date, { color: theme.colors.textMuted }]}>{date}</Text>
       </View>

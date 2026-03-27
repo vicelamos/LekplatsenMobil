@@ -77,7 +77,6 @@ export const getPlaygroundImage = async (playground) => {
     const q = query(
       collection(db, 'incheckningar'),
       where('lekplatsId', '==', pgId),
-      orderBy('timestamp', 'desc'),
       limit(10)
     );
     const snap = await getDocs(q);

@@ -13,7 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth, db } from '../firebase';
+import { auth, db } from '../../firebase';
 import {
   doc,
   getDoc,
@@ -28,8 +28,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 // 🟢 Tema & UI
-import { useTheme } from '../src/theme';
-import { Card } from '../src/ui';
+import { useTheme } from '../../src/theme';
+import { Card } from '../../src/ui';
 
 /* -------------------------------------------------------------------------- */
 /* Komponent: Enskild kommentar                                                */

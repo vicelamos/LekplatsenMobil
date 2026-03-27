@@ -12,11 +12,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 // Tema & UI-komponenter
-import { useTheme } from '../src/theme';
-import { Card, Button, Input, PatternBackground } from '../src/ui';
+import { useTheme } from '../../src/theme';
+import { Card, Button, Input, PatternBackground } from '../../src/ui';
 
 // Firebase
-import { auth } from '../firebase';
+import { auth } from '../../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
 export default function ForgotPasswordScreen({ navigation }) {
