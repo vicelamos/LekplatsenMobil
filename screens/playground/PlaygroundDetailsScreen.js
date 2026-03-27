@@ -200,6 +200,7 @@ export default function PlaygroundDetailsScreen({ route, navigation }) {
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [suggestionText, setSuggestionText] = useState('');
+  const [suggestionCategory, setSuggestionCategory] = useState(null);
   const [sendingSuggestion, setSendingSuggestion] = useState(false);
 
   const userId = auth.currentUser?.uid;
@@ -413,9 +414,22 @@ useEffect(() => {
     }
   };
 
+  const SUGGESTION_CATEGORIES = [
+    { key: 'adress', label: 'Fel adress / plats', placeholder: 'Beskriv vad som är fel med adressen eller platsen…' },
+    { key: 'saknad_utrustning', label: 'Saknad utrustning', placeholder: 'Vilken utrustning saknas? T.ex. gungor, klätterställning…' },
+    { key: 'felaktig_utrustning', label: 'Felaktig utrustning', placeholder: 'Vilken utrustning stämmer inte? Vad borde det vara?…' },
+    { key: 'bild', label: 'Felaktig bild', placeholder: 'Beskriv vad som är fel med bilden…' },
+    { key: 'finns_inte', label: 'Lekplatsen finns inte', placeholder: 'Beskriv varför du tror att platsen inte finns…' },
+    { key: 'annat', label: 'Annat', placeholder: 'Beskriv vad du vill ändra eller rapportera…' },
+  ];
+
   const submitSuggestion = async () => {
+    if (!suggestionCategory) {
+      Alert.alert('Välj kategori', 'Välj vad ditt förslag handlar om.');
+      return;
+    }
     if (!suggestionText.trim()) {
-      Alert.alert('Tomt förslag', 'Skriv vad du vill ändra eller rapportera.');
+      Alert.alert('Tomt förslag', 'Beskriv vad du vill ändra.');
       return;
     }
     try {
@@ -424,11 +438,13 @@ useEffect(() => {
         lekplatsId: playground.id,
         lekplatsNamn: playground.name,
         userId,
+        category: suggestionCategory,
         message: suggestionText.trim(),
         status: 'pending',
         createdAt: serverTimestamp(),
       });
       setSuggestionText('');
+      setSuggestionCategory(null);
       setShowSuggestModal(false);
       Alert.alert('Tack!', 'Ditt förslag har skickats till en administratör.');
     } catch (e) {
@@ -645,7 +661,7 @@ useEffect(() => {
             onPress={() => setShowSuggestModal(true)}
             style={{ marginHorizontal: theme.space.lg, marginTop: theme.space.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 }}
           >
-            <Ionicons name="create-outline" size={16} color={theme.colors.textMuted} />
+            <Ionicons name="flag-outline" size={16} color={theme.colors.textMuted} />
             <Text style={{ color: theme.colors.textMuted, fontWeight: '600', fontSize: 13 }}>Föreslå ändring</Text>
           </TouchableOpacity>
         )}
@@ -695,32 +711,65 @@ useEffect(() => {
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.select({ ios: 'padding', android: undefined })}>
           <View style={styles.modalOverlay}>
             <View style={[styles.modalContent, { backgroundColor: theme.colors.cardBg }]}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.space.md }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.space.sm }}>
                 <Text style={{ fontSize: 18, fontWeight: '800', color: theme.colors.text }}>Föreslå ändring</Text>
-                <TouchableOpacity onPress={() => { setShowSuggestModal(false); setSuggestionText(''); }}>
+                <TouchableOpacity onPress={() => { setShowSuggestModal(false); setSuggestionText(''); setSuggestionCategory(null); }}>
                   <Ionicons name="close" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
               </View>
-              <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginBottom: theme.space.sm }}>
-                Beskriv vad som är fel eller bör ändras på "{playground?.name}". En administratör kommer att granska ditt förslag.
+              <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginBottom: theme.space.md }}>
+                Vad gäller ditt förslag för "{playground?.name}"?
               </Text>
-              <TextInput
-                style={[styles.suggestionInput, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBg || theme.colors.bgSoft, color: theme.colors.text }]}
-                value={suggestionText}
-                onChangeText={setSuggestionText}
-                placeholder="T.ex. Fel adress, saknad utrustning, felaktig bild…"
-                placeholderTextColor={theme.colors.textMuted}
-                multiline
-                textAlignVertical="top"
-                maxLength={500}
-              />
-              <Text style={{ color: theme.colors.textMuted, fontSize: 11, textAlign: 'right', marginTop: 4 }}>
-                {suggestionText.length}/500
-              </Text>
+
+              {/* Kategorival */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: theme.space.md }}>
+                {SUGGESTION_CATEGORIES.map((cat) => {
+                  const selected = suggestionCategory === cat.key;
+                  return (
+                    <TouchableOpacity
+                      key={cat.key}
+                      onPress={() => setSuggestionCategory(cat.key)}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 7,
+                        borderRadius: 20,
+                        borderWidth: 1.5,
+                        borderColor: selected ? theme.colors.primary : theme.colors.border,
+                        backgroundColor: selected ? theme.colors.primarySoft : 'transparent',
+                      }}
+                    >
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: selected ? theme.colors.primary : theme.colors.textMuted }}>
+                        {cat.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Fritext – visas när kategori är vald */}
+              {suggestionCategory && (
+                <>
+                  <TextInput
+                    style={[styles.suggestionInput, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBg || theme.colors.bgSoft, color: theme.colors.text }]}
+                    value={suggestionText}
+                    onChangeText={setSuggestionText}
+                    placeholder={SUGGESTION_CATEGORIES.find(c => c.key === suggestionCategory)?.placeholder}
+                    placeholderTextColor={theme.colors.textMuted}
+                    multiline
+                    textAlignVertical="top"
+                    maxLength={500}
+                    autoFocus
+                  />
+                  <Text style={{ color: theme.colors.textMuted, fontSize: 11, textAlign: 'right', marginTop: 4, marginBottom: theme.space.sm }}>
+                    {suggestionText.length}/500
+                  </Text>
+                </>
+              )}
+
               <TouchableOpacity
                 onPress={submitSuggestion}
-                disabled={sendingSuggestion}
-                style={[styles.submitBtn, { backgroundColor: theme.colors.primary, opacity: sendingSuggestion ? 0.7 : 1 }]}
+                disabled={sendingSuggestion || !suggestionCategory}
+                style={[styles.submitBtn, { backgroundColor: theme.colors.primary, opacity: (sendingSuggestion || !suggestionCategory) ? 0.4 : 1 }]}
               >
                 {sendingSuggestion ? (
                   <ActivityIndicator color="#fff" />

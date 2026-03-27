@@ -8,12 +8,16 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Linking,
+  Modal,
+  Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../firebase';
-import { signOut } from 'firebase/auth';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { doc, getDoc, collection, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme';
 import { Card } from '../../src/ui';
@@ -30,6 +34,9 @@ function ProfileScreen() {
   const [userProfile, setUserProfile] = useState(null);
   const [trophyCount, setTrophyCount] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const userId = auth.currentUser?.uid;
 
@@ -57,6 +64,38 @@ function ProfileScreen() {
 
   const handleLogout = () => {
     signOut(auth).catch((error) => console.error('Utloggning misslyckades', error));
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword || deleteLoading) return;
+    setDeleteLoading(true);
+    try {
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, deletePassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+
+      // Radera underkollektioner
+      const subcollections = ['unlockedTrophies', 'notifications', 'completedChallenges', 'klaradeUtmaningar'];
+      for (const sub of subcollections) {
+        const snap = await getDocs(collection(db, 'users', userId, sub));
+        const batch = writeBatch(db);
+        snap.docs.forEach((d) => batch.delete(d.ref));
+        if (!snap.empty) await batch.commit();
+      }
+
+      // Radera användardokumentet
+      await deleteDoc(doc(db, 'users', userId));
+
+      // Radera Firebase Auth-kontot
+      await deleteUser(auth.currentUser);
+      // onAuthStateChanged i App.js hanterar navigering automatiskt
+    } catch (error) {
+      setDeleteLoading(false);
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        Alert.alert('Fel lösenord', 'Kontrollera ditt lösenord och försök igen.');
+      } else {
+        Alert.alert('Fel', 'Kunde inte radera kontot. Försök igen.');
+      }
+    }
   };
 
   if (loading) {
@@ -211,8 +250,53 @@ function ProfileScreen() {
           <Text style={{ textAlign: 'center', color: theme.colors.textMuted, fontSize: 12, marginTop: 16 }}>
             Version {Constants.expoConfig?.version ?? '–'}
           </Text>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/Policy%2FSekretesspolicy%20f%C3%B6r%20Lekplatsen.pdf?alt=media&token=e40b620d-4801-4f9c-918b-6c91d4bd19a1')}
+            style={{ marginTop: 8, alignItems: 'center' }}
+          >
+            <Text style={{ color: theme.colors.textMuted, fontSize: 12, textDecorationLine: 'underline' }}>
+              Sekretesspolicy
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => { setDeletePassword(''); setDeleteModalVisible(true); }}
+            style={{ marginTop: 20, alignItems: 'center' }}
+          >
+            <Text style={{ color: theme.colors.danger, fontSize: 13 }}>Radera konto</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Modal: Radera konto */}
+      <Modal visible={deleteModalVisible} transparent animationType="fade" onRequestClose={() => setDeleteModalVisible(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setDeleteModalVisible(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.modalSheet, { backgroundColor: theme.colors.cardBg }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.danger }]}>Radera konto</Text>
+            <Text style={[styles.modalBody, { color: theme.colors.textMuted }]}>
+              Detta raderar ditt konto och alla dina uppgifter permanent. Åtgärden kan inte ångras.{'\n\n'}Bekräfta med ditt lösenord:
+            </Text>
+            <TextInput
+              style={[styles.passwordInput, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.bgSoft }]}
+              placeholder="Lösenord"
+              placeholderTextColor={theme.colors.textMuted}
+              secureTextEntry
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              style={[styles.deleteBtn, (!deletePassword || deleteLoading) && { opacity: 0.4 }]}
+              onPress={handleDeleteAccount}
+              disabled={!deletePassword || deleteLoading}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700' }}>{deleteLoading ? 'Raderar...' : 'Radera mitt konto'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={{ marginTop: 12, alignItems: 'center' }}>
+              <Text style={{ color: theme.colors.textMuted }}>Avbryt</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -286,6 +370,12 @@ const getStyles = (theme) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
+    modalSheet: { borderRadius: 20, padding: 24 },
+    modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 12 },
+    modalBody: { fontSize: 14, lineHeight: 20, marginBottom: 16 },
+    passwordInput: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 16 },
+    deleteBtn: { backgroundColor: '#ef4444', padding: 14, borderRadius: 12, alignItems: 'center' },
   });
 
 export default ProfileScreen;

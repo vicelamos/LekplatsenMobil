@@ -15,7 +15,14 @@
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.viktorandre.LekplatsenMobil"
+      "bundleIdentifier": "com.viktorandre.LekplatsenMobil",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Vi använder din plats för att visa lekplatser nära dig och beräkna avstånd.",
+        "NSCameraUsageDescription": "Vi använder kameran så att du kan ta foton när du checkar in på en lekplats.",
+        "NSPhotoLibraryUsageDescription": "Vi använder fotobiblioteket så att du kan välja bilder vid incheckning och profilbild.",
+        "NSMicrophoneUsageDescription": "Krävs av kamerafunktionen för att ta foton."
+      }
     },
     "android": {
       "adaptiveIcon": {

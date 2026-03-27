@@ -9,6 +9,7 @@ import {
   Image,
   Dimensions,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -225,6 +226,19 @@ export default function SignupScreen({ navigation }) {
                 {errors.confirm && <Text style={{color: 'red', fontSize: 10}}>{errors.confirm}</Text>}
               </View>
 
+              <Text style={{ textAlign: 'center', color: '#888', fontSize: 12, marginBottom: 4 }}>
+                Appen är avsedd för användare som är 13 år eller äldre.
+              </Text>
+              <Text style={{ textAlign: 'center', color: '#888', fontSize: 12, marginBottom: 12 }}>
+                Genom att registrera dig godkänner du vår{' '}
+                <Text
+                  style={{ color: '#6200ea', textDecorationLine: 'underline' }}
+                  onPress={() => Linking.openURL('https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/Policy%2FSekretesspolicy%20f%C3%B6r%20Lekplatsen.pdf?alt=media&token=e40b620d-4801-4f9c-918b-6c91d4bd19a1')}
+                >
+                  sekretesspolicy
+                </Text>
+                .
+              </Text>
               <Button
                 title={loading ? 'Skapar konto...' : 'Gå med nu'}
                 onPress={handleSignup}

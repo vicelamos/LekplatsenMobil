@@ -65,25 +65,25 @@ function ReviewDraftsScreen({ navigation }) {
         text: 'Godkänn',
         onPress: async () => {
           try {
-            await updateDoc(doc(db, 'lekplatser', item.id), {
-              status: 'publicerad',
-            });
-            if (item.createdBy) {
-              await addDoc(
-                collection(db, 'users', item.createdBy, 'notifications'),
-                {
-                  type: 'PLAYGROUND_APPROVED',
-                  title: 'Lekplats godkänd!',
-                  message: `Din lekplats "${item.namn}" har godkänts och är nu publicerad.`,
-                  read: false,
-                  createdAt: serverTimestamp(),
-                  link: `/lekplats/${item.id}`,
-                }
-              );
-            }
+            await updateDoc(doc(db, 'lekplatser', item.id), { status: 'publicerad' });
             setDrafts((prev) => prev.filter((d) => d.id !== item.id));
           } catch (e) {
             Alert.alert('Fel', 'Kunde inte godkänna lekplatsen.');
+            return;
+          }
+          if (item.createdBy) {
+            try {
+              await addDoc(collection(db, 'users', item.createdBy, 'notifications'), {
+                type: 'PLAYGROUND_APPROVED',
+                title: 'Lekplats godkänd!',
+                message: `Din lekplats "${item.namn}" har godkänts och är nu publicerad.`,
+                read: false,
+                createdAt: serverTimestamp(),
+                link: `/lekplats/${item.id}`,
+              });
+            } catch {
+              // Notisen är inte kritisk
+            }
           }
         },
       },
@@ -101,22 +101,24 @@ function ReviewDraftsScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              if (item.createdBy) {
-                await addDoc(
-                  collection(db, 'users', item.createdBy, 'notifications'),
-                  {
-                    type: 'PLAYGROUND_REJECTED',
-                    title: 'Lekplats nekad',
-                    message: `Din lekplats "${item.namn}" godkändes tyvärr inte.`,
-                    read: false,
-                    createdAt: serverTimestamp(),
-                  }
-                );
-              }
               await deleteDoc(doc(db, 'lekplatser', item.id));
               setDrafts((prev) => prev.filter((d) => d.id !== item.id));
             } catch (e) {
               Alert.alert('Fel', 'Kunde inte ta bort lekplatsen.');
+              return;
+            }
+            if (item.createdBy) {
+              try {
+                await addDoc(collection(db, 'users', item.createdBy, 'notifications'), {
+                  type: 'PLAYGROUND_REJECTED',
+                  title: 'Lekplats nekad',
+                  message: `Din lekplats "${item.namn}" godkändes tyvärr inte.`,
+                  read: false,
+                  createdAt: serverTimestamp(),
+                });
+              } catch {
+                // Notisen är inte kritisk
+              }
             }
           },
         },
@@ -126,26 +128,26 @@ function ReviewDraftsScreen({ navigation }) {
 
   const markSuggestion = async (item, newStatus) => {
     try {
-      await updateDoc(doc(db, 'andringsforslag', item.id), {
-        status: newStatus,
-      });
-      if (item.userId) {
-        const statusText = newStatus === 'done' ? 'genomförts' : 'avfärdats';
-        await addDoc(
-          collection(db, 'users', item.userId, 'notifications'),
-          {
-            type: 'SUGGESTION_UPDATE',
-            title: newStatus === 'done' ? 'Ändringsförslag genomfört!' : 'Ändringsförslag avfärdat',
-            message: `Ditt förslag för "${item.lekplatsNamn}" har ${statusText}.`,
-            read: false,
-            createdAt: serverTimestamp(),
-            link: `/lekplats/${item.lekplatsId}`,
-          }
-        );
-      }
+      await updateDoc(doc(db, 'andringsforslag', item.id), { status: newStatus });
       setSuggestions((prev) => prev.filter((s) => s.id !== item.id));
     } catch (e) {
       Alert.alert('Fel', 'Kunde inte uppdatera förslaget.');
+      return;
+    }
+    if (item.userId) {
+      const statusText = newStatus === 'done' ? 'genomförts' : 'avfärdats';
+      try {
+        await addDoc(collection(db, 'users', item.userId, 'notifications'), {
+          type: 'SUGGESTION_UPDATE',
+          title: newStatus === 'done' ? 'Ändringsförslag genomfört!' : 'Ändringsförslag avfärdat',
+          message: `Ditt förslag för "${item.lekplatsNamn}" har ${statusText}.`,
+          read: false,
+          createdAt: serverTimestamp(),
+          link: `/lekplats/${item.lekplatsId}`,
+        });
+      } catch {
+        // Notisen är inte kritisk – statusuppdateringen har redan genomförts
+      }
     }
   };
 
@@ -212,6 +214,15 @@ function ReviewDraftsScreen({ navigation }) {
     </Card>
   );
 
+  const CATEGORY_LABELS = {
+    adress: 'Fel adress / plats',
+    saknad_utrustning: 'Saknad utrustning',
+    felaktig_utrustning: 'Felaktig utrustning',
+    bild: 'Felaktig bild',
+    finns_inte: 'Lekplatsen finns inte',
+    annat: 'Annat',
+  };
+
   const renderSuggestion = ({ item }) => (
     <Card style={{ padding: theme.space.md }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.space.xs }}>
@@ -220,6 +231,13 @@ function ReviewDraftsScreen({ navigation }) {
           {item.lekplatsNamn}
         </Text>
       </View>
+      {item.category && (
+        <View style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primarySoft, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3, marginBottom: theme.space.xs }}>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: theme.colors.primary }}>
+            {CATEGORY_LABELS[item.category] ?? item.category}
+          </Text>
+        </View>
+      )}
       <Text style={{ color: theme.colors.text, lineHeight: 20, marginBottom: theme.space.sm }}>
         {item.message}
       </Text>

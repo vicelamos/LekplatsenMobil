@@ -36,6 +36,7 @@ import TrophyScreen from './screens/profile/TrophyScreen';
 import ManageSponsorsScreen from './screens/admin/ManageSponsorsScreen';
 import AdminScreen from './screens/admin/AdminScreen';
 import ManageNewsScreen from './screens/admin/ManageNewsScreen';
+import ManageReportsScreen from './screens/admin/ManageReportsScreen';
 
 
 
@@ -270,6 +271,11 @@ export default function App() {
                 name="ManageNews"
                 component={ManageNewsScreen}
                 options={{ title: 'Nyheter' }}
+              />
+              <Stack.Screen
+                name="ManageReports"
+                component={ManageReportsScreen}
+                options={{ title: 'Rapporter' }}
               />
               <Stack.Screen
                 name="Admin"

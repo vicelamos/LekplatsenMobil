@@ -35,6 +35,13 @@ const MENU_ITEMS = [
     icon: 'add-circle-outline',
     screen: 'AddPlayground',
   },
+  {
+    key: 'reports',
+    label: 'Granska rapporter',
+    description: 'Hantera rapporter om olämpligt innehåll',
+    icon: 'flag-outline',
+    screen: 'ManageReports',
+  },
 ];
 
 export default function AdminScreen() {

@@ -11,6 +11,7 @@ import {
   Platform,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../firebase';
@@ -22,8 +23,17 @@ import {
   onSnapshot,
   orderBy,
   addDoc,
+  deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
+
+const REPORT_REASONS = [
+  'Olämpligt innehåll',
+  'Spam',
+  'Stötande språk',
+  'Felaktig information',
+  'Annat',
+];
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -34,25 +44,67 @@ import { Card } from '../../src/ui';
 /* -------------------------------------------------------------------------- */
 /* Komponent: Enskild kommentar                                                */
 /* -------------------------------------------------------------------------- */
-const CommentCard = React.memo(({ item }) => {
+const CommentCard = React.memo(({ item, checkInId, currentUserId }) => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const { user, comment } = item;
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [reportVisible, setReportVisible] = useState(false);
+  const [selectedReason, setSelectedReason] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!user) return null;
 
+  const isOwn = user.uid === currentUserId;
   const date = comment.timestamp?.toDate?.().toLocaleDateString('sv-SE') || 'Just nu';
+
+  const handleDelete = () => {
+    setMenuVisible(false);
+    Alert.alert('Radera kommentar', 'Är du säker?', [
+      { text: 'Avbryt', style: 'cancel' },
+      {
+        text: 'Radera', style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteDoc(doc(db, 'incheckningar', checkInId, 'comments', item.id));
+          } catch {
+            Alert.alert('Fel', 'Kunde inte radera kommentaren.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!selectedReason || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'rapporter'), {
+        type: 'comment',
+        itemId: item.id,
+        checkInId,
+        reportedUserId: user.uid,
+        reportedByUserId: currentUserId,
+        reason: selectedReason,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      setReportVisible(false);
+      setSelectedReason(null);
+      Alert.alert('Tack', 'Din rapport har skickats och granskas av en administratör.');
+    } catch {
+      Alert.alert('Fel', 'Kunde inte skicka rapporten. Försök igen.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Card style={{ padding: theme.space.md, marginHorizontal: theme.space.lg, marginTop: theme.space.sm }}>
-      <View style={{ flexDirection: 'row' }}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('PublicProfile', { userId: user.uid })}
-        >
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('PublicProfile', { userId: user.uid })}>
           <Image
-            source={{ 
-              uri: user.profilbildUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.smeknamn)}&background=e0e0e0&color=777` 
-            }}
+            source={{ uri: user.profilbildUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.smeknamn)}&background=e0e0e0&color=777` }}
             style={styles.avatarSmall}
           />
         </TouchableOpacity>
@@ -65,7 +117,60 @@ const CommentCard = React.memo(({ item }) => {
           </TouchableOpacity>
           <Text style={{ color: theme.colors.text, marginTop: 2 }}>{comment.text}</Text>
         </View>
+        <TouchableOpacity onPress={() => setMenuVisible(true)} style={{ padding: 4 }}>
+          <Ionicons name="ellipsis-horizontal" size={16} color={theme.colors.textMuted} />
+        </TouchableOpacity>
       </View>
+
+      {/* Meny-modal */}
+      <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
+        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setMenuVisible(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.menuSheet, { backgroundColor: theme.colors.cardBg }]}>
+            {!isOwn && (
+              <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); setSelectedReason(null); setReportVisible(true); }}>
+                <Ionicons name="flag-outline" size={20} color={theme.colors.danger} />
+                <Text style={[styles.menuItemText, { color: theme.colors.danger }]}>Rapportera kommentar</Text>
+              </TouchableOpacity>
+            )}
+            {isOwn && (
+              <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
+                <Ionicons name="trash-outline" size={20} color={theme.colors.danger} />
+                <Text style={[styles.menuItemText, { color: theme.colors.danger }]}>Radera kommentar</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={[styles.menuItem, { borderTopWidth: 0.5, borderTopColor: theme.colors.border }]} onPress={() => setMenuVisible(false)}>
+              <Text style={[styles.menuItemText, { color: theme.colors.textMuted }]}>Avbryt</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Rapport-modal */}
+      <Modal visible={reportVisible} transparent animationType="fade" onRequestClose={() => setReportVisible(false)}>
+        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setReportVisible(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.reportSheet, { backgroundColor: theme.colors.cardBg }]}>
+            <Text style={[styles.reportTitle, { color: theme.colors.text }]}>Rapportera kommentar</Text>
+            <Text style={[styles.reportSubtitle, { color: theme.colors.textMuted }]}>Välj anledning</Text>
+            {REPORT_REASONS.map((reason) => (
+              <TouchableOpacity
+                key={reason}
+                style={[styles.reasonRow, { borderColor: theme.colors.border }, selectedReason === reason && { backgroundColor: theme.colors.primarySoft }]}
+                onPress={() => setSelectedReason(reason)}
+              >
+                <Ionicons name={selectedReason === reason ? 'radio-button-on' : 'radio-button-off'} size={18} color={selectedReason === reason ? theme.colors.primary : theme.colors.textMuted} />
+                <Text style={{ color: theme.colors.text, fontSize: 15 }}>{reason}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={[styles.submitBtn, { backgroundColor: theme.colors.primary }, (!selectedReason || isSubmitting) && { opacity: 0.4 }]}
+              onPress={handleSubmitReport}
+              disabled={!selectedReason || isSubmitting}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700' }}>{isSubmitting ? 'Skickar...' : 'Skicka rapport'}</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </Card>
   );
 });
@@ -197,7 +302,7 @@ export default function CommentsScreen({ route }) {
         <FlatList
           data={comments}
           keyExtractor={item => item.id}
-          renderItem={({ item }) => <CommentCard item={item} />}
+          renderItem={({ item }) => <CommentCard item={item} checkInId={checkInId} currentUserId={userId} />}
           ListHeaderComponent={() => (
             <Card style={styles.headerCard}>
               <Text style={{ fontStyle: 'italic', color: theme.colors.text }}>
@@ -347,10 +452,19 @@ const styles = StyleSheet.create({
     maxHeight: 200,
     overflow: 'hidden',
   },
-  mentionItem: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    padding: 12, 
-    borderBottomWidth: 0.5, 
-  }
+  mentionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 0.5,
+  },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  menuSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 16, paddingBottom: 40 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16, paddingHorizontal: 24 },
+  menuItemText: { fontSize: 16, fontWeight: '600' },
+  reportSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
+  reportTitle: { fontSize: 17, fontWeight: '800', marginBottom: 4 },
+  reportSubtitle: { fontSize: 13, marginBottom: 16 },
+  reasonRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 10, borderWidth: 1, marginBottom: 8 },
+  submitBtn: { marginTop: 8, padding: 14, borderRadius: 12, alignItems: 'center' },
 });
