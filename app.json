@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "LekplatsenMobil",
+    "name": "Lekplatsen Sverige",
     "slug": "LekplatsenMobil",
     "version": "1.0.1",
     "orientation": "portrait",
@@ -35,10 +35,11 @@
       "useNextNotificationsApi": true,
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDvSLxFcoLa-INeeWv5wAVU_fK2ErNDviM"
+          "apiKey": "REPLACED_BY_APP_CONFIG_JS"
         }
       }
     },
+    "scheme": "lekplatsen",
     "web": {
       "favicon": "./assets/favicon.png"
     },
@@ -50,7 +51,8 @@
           "icon": "./assets/notification-icon.png",
           "color": "#6200ea"
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "extra": {
       "eas": {

@@ -41,6 +41,7 @@ export default function SignupScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [secure, setSecure] = useState(true);
   const [errors, setErrors] = useState({});
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Slumpa fram smeknamn
   const generateUsername = () => {
@@ -77,12 +78,19 @@ export default function SignupScreen({ navigation }) {
       nextErrors.smeknamn = 'Välj ett smeknamn.';
       ok = false;
     }
-    if (password.length < 6) {
-      nextErrors.password = 'Minst 6 tecken.';
+    if (password.length < 8) {
+      nextErrors.password = 'Minst 8 tecken.';
+      ok = false;
+    } else if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+      nextErrors.password = 'Måste innehålla stora och små bokstäver samt en siffra.';
       ok = false;
     }
     if (password !== confirmPassword) {
       nextErrors.confirm = 'Lösenorden matchar inte.';
+      ok = false;
+    }
+    if (!acceptedTerms) {
+      nextErrors.terms = 'Du måste godkänna villkoren för att fortsätta.';
       ok = false;
     }
 
@@ -226,23 +234,41 @@ export default function SignupScreen({ navigation }) {
                 {errors.confirm && <Text style={{color: 'red', fontSize: 10}}>{errors.confirm}</Text>}
               </View>
 
-              <Text style={{ textAlign: 'center', color: '#888', fontSize: 12, marginBottom: 4 }}>
-                Appen är avsedd för användare som är 13 år eller äldre.
-              </Text>
-              <Text style={{ textAlign: 'center', color: '#888', fontSize: 12, marginBottom: 12 }}>
-                Genom att registrera dig godkänner du vår{' '}
-                <Text
-                  style={{ color: '#6200ea', textDecorationLine: 'underline' }}
-                  onPress={() => Linking.openURL('https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/Policy%2FSekretesspolicy%20f%C3%B6r%20Lekplatsen.pdf?alt=media&token=e40b620d-4801-4f9c-918b-6c91d4bd19a1')}
-                >
-                  sekretesspolicy
+              <TouchableOpacity
+                onPress={() => setAcceptedTerms(!acceptedTerms)}
+                style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16 }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={acceptedTerms ? 'checkbox' : 'square-outline'}
+                  size={22}
+                  color={acceptedTerms ? theme.colors.primary : theme.colors.textMuted}
+                  style={{ marginRight: 8, marginTop: 1 }}
+                />
+                <Text style={{ flex: 1, color: theme.colors.textMuted, fontSize: 12, lineHeight: 18 }}>
+                  Jag är 13 år eller äldre och godkänner{' '}
+                  <Text
+                    style={{ color: theme.colors.link, textDecorationLine: 'underline' }}
+                    onPress={() => Linking.openURL('https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/Policy%2FSekretesspolicy%20f%C3%B6r%20Lekplatsen.pdf?alt=media&token=e40b620d-4801-4f9c-918b-6c91d4bd19a1')}
+                  >
+                    sekretesspolicyn
+                  </Text>
+                  {' '}och{' '}
+                  <Text
+                    style={{ color: theme.colors.link, textDecorationLine: 'underline' }}
+                    onPress={() => Linking.openURL('https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/Policy%2FAnv%C3%A4ndarvillkor%20f%C3%B6r%20Lekplatsen.pdf?alt=media')}
+                  >
+                    användarvillkoren
+                  </Text>
+                  .
                 </Text>
-                .
-              </Text>
+              </TouchableOpacity>
+              {errors.terms && <Text style={{color: 'red', fontSize: 10, marginBottom: 8, marginTop: -8}}>{errors.terms}</Text>}
               <Button
                 title={loading ? 'Skapar konto...' : 'Gå med nu'}
                 onPress={handleSignup}
                 loading={loading}
+                disabled={!acceptedTerms}
               />
             </Card>
 

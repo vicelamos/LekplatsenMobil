@@ -20,8 +20,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { File as ExpoFile } from 'expo-file-system';
+import { signInAnonymously } from 'firebase/auth';
 import { auth, db, storage } from '../../firebase';
 import { compressImage, getReadableFileSize } from '../../utils/imageCompression';
+import { checkinImagePath } from '../../utils/anonymization';
+import { uploadBase64 } from '../../src/services/storageService';
 import { trackSponsorEvent } from '../../utils/sponsorAnalytics';
 import {
   doc,
@@ -30,20 +33,25 @@ import {
   collection,
   serverTimestamp,
   updateDoc,
-  setDoc,
 } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
 
 // 🟢 Tema & UI
 import { useTheme } from '../../src/theme';
 import { Card } from '../../src/ui';
+import { useAppReview } from '../../src/hooks/useAppReview';
 
 
 export default function CheckInScreen({ route, navigation }) {
   const { theme } = useTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
+  const { maybeRequestReview } = useAppReview();
   const playgroundId = route.params?.playgroundId;
+  const isGuest = route.params?.guest === true;
+
+  const [guestName, setGuestName] = useState('');
+  const [anonReady, setAnonReady] = useState(!isGuest);
 
   const [pgName, setPgName] = useState('Lekplats');
   const [loadingPg, setLoadingPg] = useState(false);
@@ -84,11 +92,32 @@ export default function CheckInScreen({ route, navigation }) {
   const [taggedFriends, setTaggedFriends] = useState([]);
 
   const userId = auth.currentUser?.uid || null;
-  const userSmeknamn = auth.currentUser?.displayName || 'Användare';
+  const trimmedGuestName = guestName.trim();
+  const userSmeknamn = isGuest
+    ? trimmedGuestName
+    : (auth.currentUser?.displayName || 'Användare');
 
   useEffect(() => {
-    navigation.setOptions({ title: 'Checka in' });
-  }, [navigation]);
+    navigation.setOptions({ title: isGuest ? 'Checka in som gäst' : 'Checka in' });
+  }, [navigation, isGuest]);
+
+  // Logga in anonymt för gäst-incheckning så Firestore-reglerna håller
+  useEffect(() => {
+    if (!isGuest) return;
+    if (auth.currentUser) {
+      setAnonReady(true);
+      return;
+    }
+    let cancelled = false;
+    signInAnonymously(auth)
+      .then(() => { if (!cancelled) setAnonReady(true); })
+      .catch((e) => {
+        console.warn('Anonym inloggning misslyckades:', e);
+        Alert.alert('Fel', 'Kunde inte starta gäst-incheckningen. Försök igen.');
+        navigation.goBack();
+      });
+    return () => { cancelled = true; };
+  }, [isGuest, navigation]);
 
   // Hämta lekplatsnamn + utrustning + utmaningar + redan klarade utmaningar
   useEffect(() => {
@@ -104,7 +133,7 @@ export default function CheckInScreen({ route, navigation }) {
           setChallengeOptions(Array.isArray(d.utmaningar) ? d.utmaningar : []);
         }
 
-        if (userId) {
+        if (userId && !isGuest) {
           const completedSnap = await getDoc(doc(db, 'users', userId, 'klaradeUtmaningar', playgroundId));
           if (completedSnap.exists()) {
             const completed = completedSnap.data().utmaningar || [];
@@ -144,7 +173,7 @@ export default function CheckInScreen({ route, navigation }) {
   // Hämta vänner för taggning
   useEffect(() => {
     const fetchFriends = async () => {
-      if (!userId) return;
+      if (!userId || isGuest) return;
       try {
         const userSnap = await getDoc(doc(db, 'users', userId));
         if (userSnap.exists()) {
@@ -199,32 +228,6 @@ export default function CheckInScreen({ route, navigation }) {
     }
     return <View style={{ flexDirection: 'row', gap: 4 }}>{items}</View>;
   }, [rating, theme.colors.textMuted]);
-
-  // helpers
-  const uploadBase64 = async (storageRef, base64Data) => {
-    const bucket = storageRef.bucket;
-    const encodedPath = encodeURIComponent(storageRef.fullPath);
-    const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}`;
-    const token = await auth.currentUser?.getIdToken();
-    const binaryStr = atob(base64Data);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) {
-      bytes[i] = binaryStr.charCodeAt(i);
-    }
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error(`Upload failed: ${xhr.status}`));
-      };
-      xhr.onerror = () => reject(new Error('Upload XHR error'));
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'image/jpeg');
-      xhr.setRequestHeader('X-Goog-Upload-Protocol', 'raw');
-      if (token) xhr.setRequestHeader('Authorization', `Firebase ${token}`);
-      xhr.send(bytes);
-    });
-  };
 
   const addTaggedFriend = (friend) => {
     if (!taggedFriends.some(tf => tf.id === friend.id)) {
@@ -294,8 +297,7 @@ export default function CheckInScreen({ route, navigation }) {
       setUploading(true);
       const file = new ExpoFile(imageUri);
       const base64Data = await file.base64();
-      const ext = 'jpg';
-      const path = `images/checkins/${userId}/${checkInDocId}/${Date.now()}.${ext}`;
+      const path = checkinImagePath(checkInDocId, `${Date.now()}.jpg`);
       const storageRef = ref(storage, path);
       await uploadBase64(storageRef, base64Data);
       const url = await getDownloadURL(storageRef);
@@ -318,7 +320,8 @@ export default function CheckInScreen({ route, navigation }) {
   // Skapa incheckning
   const submit = async () => {
     try {
-      if (!userId) {
+      const currentUid = auth.currentUser?.uid;
+      if (!currentUid) {
         Alert.alert('Inte inloggad', 'Du måste vara inloggad för att checka in.');
         return;
       }
@@ -330,30 +333,35 @@ export default function CheckInScreen({ route, navigation }) {
         Alert.alert('Betyg saknas', 'Välj ett betyg (1–5).');
         return;
       }
+      if (isGuest && trimmedGuestName.length < 2) {
+        Alert.alert('Namn saknas', 'Ange ett namn (minst 2 tecken).');
+        return;
+      }
       setSubmitting(true);
 
       const baseDoc = {
         betyg: Number(rating),
         bildUrl: '',
         commentCount: 0,
-        gjordaAktiviteter,
-        klaradeUtmaningar,
+        gjordaAktiviteter: isGuest ? [] : gjordaAktiviteter,
+        klaradeUtmaningar: isGuest ? [] : klaradeUtmaningar,
         kommentar: (comment || '').trim(),
         lekplatsId: playgroundId,
         lekplatsNamn: pgName || '',
         likes: [],
-        taggadeVanner: taggedFriends.map(f => f.id),
-        tidPaLekplats: (selectedTime || '').toString().trim(),
+        taggadeVanner: isGuest ? [] : taggedFriends.map(f => f.id),
+        tidPaLekplats: isGuest ? '' : (selectedTime || '').toString().trim(),
         timestamp: serverTimestamp(),
-        userId,
+        userId: currentUid,
         userSmeknamn,
+        ...(isGuest ? { isGuest: true } : {}),
       };
 
       const refCol = collection(db, 'incheckningar');
       const created = await addDoc(refCol, baseDoc);
 
-      // Bild (valfritt)
-      if (imageUri) {
+      // Bild (valfritt) — ej tillgängligt för gäst
+      if (!isGuest && imageUri) {
         const finalBildUrl = await uploadImageIfAny(created.id);
         if (finalBildUrl) {
           await updateDoc(doc(db, 'incheckningar', created.id), { bildUrl: finalBildUrl });
@@ -362,14 +370,11 @@ export default function CheckInScreen({ route, navigation }) {
         }
       }
 
-      // Spara klarade utmaningar
-      if (klaradeUtmaningar.length > 0) {
-        const allCompleted = [...new Set([...previouslyCompleted, ...klaradeUtmaningar])];
-        await setDoc(doc(db, 'users', userId, 'klaradeUtmaningar', playgroundId), {
-          utmaningar: allCompleted,
-          updatedAt: serverTimestamp(),
-        }, { merge: true });
-      }
+      // Klarade utmaningar hanteras nu enbart av molnfunktionen
+      // updateUserAndPlaygroundStats (skriver users/{uid}/klaradeUtmaningar/{lekplatsId}
+      // och ökar totalCompletedChallenges i samma transaktion). Klienten skriver
+      // därför inte längre själv – det undvek dubbelräkning och en race mot
+      // funktionens transaktion. Fältet klaradeUtmaningar följer med incheckningsdoken.
 
       // Kolla sponsorskap
       try {
@@ -388,7 +393,16 @@ export default function CheckInScreen({ route, navigation }) {
       } catch (_) {}
 
       Alert.alert('Klart!', 'Din incheckning är sparad.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
+        { text: 'OK', onPress: async () => {
+          if (!isGuest && auth.currentUser) {
+            try {
+              const userSnap = await getDoc(doc(db, 'users', auth.currentUser.uid));
+              const count = userSnap.data()?.totalCheckinCount || 0;
+              await maybeRequestReview(count);
+            } catch (_) {}
+          }
+          navigation.goBack();
+        }},
       ]);
     } catch (e) {
       console.error('Kunde inte skapa incheckning:', e);
@@ -428,7 +442,7 @@ export default function CheckInScreen({ route, navigation }) {
       style={{ flex: 1, backgroundColor: theme.colors.bg }}
       behavior={Platform.select({ ios: 'padding', android: undefined })}
     >
-      <ScrollView contentContainerStyle={{ padding: theme.space.lg, paddingBottom: theme.space.xl }}>
+      <ScrollView contentContainerStyle={{ padding: theme.space.lg, paddingBottom: 80 + theme.space.xl }}>
 
         {/* Lekplatsheader */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: theme.space.sm }}>
@@ -437,6 +451,36 @@ export default function CheckInScreen({ route, navigation }) {
             {loadingPg ? 'Laddar…' : pgName}
           </Text>
         </View>
+
+        {isGuest && (
+          <Card style={{ padding: theme.space.md, marginBottom: theme.space.sm }}>
+            <Text style={{ fontWeight: '800', color: theme.colors.text, marginBottom: theme.space.xs, fontSize: 14 }}>
+              Ditt namn
+            </Text>
+            <TextInput
+              style={[styles.inputMultiline, { minHeight: 44, height: 44 }]}
+              value={guestName}
+              onChangeText={setGuestName}
+              placeholder="Vad ska vi kalla dig?"
+              placeholderTextColor={theme.colors.textMuted}
+              maxLength={30}
+              returnKeyType="done"
+            />
+            <Text style={{ marginTop: theme.space.sm, color: theme.colors.textMuted, fontSize: 12, lineHeight: 17 }}>
+              Du checkar in som gäst. Logga in eller registrera dig för att även kunna lägga till bilder, tagga vänner, klara utmaningar och samla troféer — och för att kunna redigera eller ta bort din incheckning senare.
+            </Text>
+            <TouchableOpacity
+              style={styles.guestLoginBtn}
+              onPress={() => navigation.navigate('Login', {
+                returnTo: 'CheckIn',
+                returnParams: { playgroundId },
+              })}
+            >
+              <Ionicons name="log-in-outline" size={18} color={theme.colors.primary} />
+              <Text style={styles.guestLoginBtnText}>Logga in / Registrera dig</Text>
+            </TouchableOpacity>
+          </Card>
+        )}
 
         {/* === SNABB-LÄGE === */}
 
@@ -459,54 +503,43 @@ export default function CheckInScreen({ route, navigation }) {
             multiline
             numberOfLines={3}
           />
-          {/* Bildrad under kommentar */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: theme.space.sm, gap: theme.space.sm }}>
-            <TouchableOpacity onPress={showImageOptions} style={styles.imageBtn}>
-              <Ionicons name="camera-outline" size={20} color={theme.colors.primary} />
-              {imageUri ? (
-                <Text style={{ color: theme.colors.primary, fontWeight: '700', fontSize: 13 }}>Bild vald</Text>
-              ) : (
-                <Text style={{ color: theme.colors.primary, fontWeight: '700', fontSize: 13 }}>Lägg till bild</Text>
+          {/* Bildrad under kommentar — endast inloggad användare */}
+          {!isGuest && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: theme.space.sm, gap: theme.space.sm }}>
+              <TouchableOpacity onPress={showImageOptions} style={styles.imageBtn}>
+                <Ionicons name="camera-outline" size={20} color={theme.colors.primary} />
+                {imageUri ? (
+                  <Text style={{ color: theme.colors.primary, fontWeight: '700', fontSize: 13 }}>Bild vald</Text>
+                ) : (
+                  <Text style={{ color: theme.colors.primary, fontWeight: '700', fontSize: 13 }}>Lägg till bild</Text>
+                )}
+              </TouchableOpacity>
+              {imageUri && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                  <Image source={{ uri: imageUri }} style={styles.imageThumbnail} />
+                  <TouchableOpacity onPress={() => setImageUri(null)}>
+                    <Ionicons name="close-circle" size={20} color={theme.colors.textMuted} />
+                  </TouchableOpacity>
+                </View>
               )}
-            </TouchableOpacity>
-            {imageUri && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                <Image source={{ uri: imageUri }} style={styles.imageThumbnail} />
-                <TouchableOpacity onPress={() => setImageUri(null)}>
-                  <Ionicons name="close-circle" size={20} color={theme.colors.textMuted} />
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-          {uploading && (
+            </View>
+          )}
+          {!isGuest && uploading && (
             <Text style={{ marginTop: 6, color: theme.colors.textMuted, fontSize: 12 }}>Laddar upp bild…</Text>
           )}
         </Card>
 
-        {/* Checka in-knapp */}
-        <TouchableOpacity
-          onPress={submit}
-          style={[styles.primaryBtn, (submitting || uploading) && { opacity: 0.7 }]}
-          disabled={submitting || uploading}
-        >
-          {submitting ? (
-            <ActivityIndicator color={theme.colors.primaryTextOn} />
-          ) : (
-            <Text style={{ color: theme.colors.primaryTextOn, fontWeight: '800', fontSize: 16 }}>
-              Checka in
+        {/* Lägg till detaljer-knapp — endast inloggad användare */}
+        {!isGuest && (
+          <TouchableOpacity onPress={toggleDetails} style={styles.detailsToggle}>
+            <Text style={{ color: theme.colors.link, fontWeight: '700', fontSize: 14 }}>
+              {showDetails ? 'Dölj detaljer ▲' : 'Lägg till detaljer ▼'}
             </Text>
-          )}
-        </TouchableOpacity>
-
-        {/* Lägg till detaljer-knapp */}
-        <TouchableOpacity onPress={toggleDetails} style={styles.detailsToggle}>
-          <Text style={{ color: theme.colors.link, fontWeight: '700', fontSize: 14 }}>
-            {showDetails ? 'Dölj detaljer ▲' : 'Lägg till detaljer ▼'}
-          </Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        )}
 
         {/* === EXPANDERBAR DETALJSEKTION === */}
-        {showDetails && (
+        {!isGuest && showDetails && (
           <View>
             {/* Tid på lekplatsen */}
             <Card style={{ padding: theme.space.md, marginTop: theme.space.sm }}>
@@ -625,6 +658,23 @@ export default function CheckInScreen({ route, navigation }) {
 
         <View style={{ height: theme.space.md }} />
       </ScrollView>
+
+      {/* Checka in-knapp — alltid synlig längst ner */}
+      <View style={{ paddingHorizontal: theme.space.lg, paddingBottom: theme.space.lg, paddingTop: theme.space.sm, backgroundColor: theme.colors.bg }}>
+        <TouchableOpacity
+          onPress={submit}
+          style={[styles.primaryBtn, (submitting || uploading || !anonReady) && { opacity: 0.7 }]}
+          disabled={submitting || uploading || !anonReady}
+        >
+          {submitting || !anonReady ? (
+            <ActivityIndicator color={theme.colors.primaryTextOn} />
+          ) : (
+            <Text style={{ color: theme.colors.primaryTextOn, fontWeight: '800', fontSize: 16 }}>
+              Checka in
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
 
       {/* Sponsor-popup */}
       <Modal visible={sponsorModal} transparent animationType="fade">
@@ -756,6 +806,22 @@ const getStyles = (theme) =>
       marginTop: theme.space.md,
       alignItems: 'center',
       paddingVertical: theme.space.sm,
+    },
+    guestLoginBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      marginTop: theme.space.sm,
+      paddingVertical: 10,
+      borderRadius: theme.radius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.primary,
+    },
+    guestLoginBtnText: {
+      color: theme.colors.primary,
+      fontWeight: '700',
+      fontSize: 14,
     },
     chipsWrap: {
       flexDirection: 'row',

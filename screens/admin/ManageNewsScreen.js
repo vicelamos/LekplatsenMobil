@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -27,6 +27,7 @@ import {
   query,
 } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../../src/theme';
 
 const TYPER = [
@@ -66,7 +67,7 @@ export default function ManageNewsScreen() {
     }
   }, []);
 
-  useEffect(() => { fetchNyheter(); }, [fetchNyheter]);
+  useFocusEffect(useCallback(() => { fetchNyheter(); }, [fetchNyheter]));
 
   const openCreate = () => {
     setEditingId(null);
@@ -158,8 +159,8 @@ export default function ManageNewsScreen() {
             {item.skapadAt?.toDate?.().toLocaleDateString('sv-SE') || '–'}
           </Text>
         </View>
-        <View style={[styles.publishBadge, { backgroundColor: item.publicerad ? '#d4edda' : theme.colors.bgSoft }]}>
-          <Text style={{ fontSize: 12, fontWeight: '700', color: item.publicerad ? '#155724' : theme.colors.textMuted }}>
+        <View style={[styles.publishBadge, { backgroundColor: item.publicerad ? theme.colors.publishedBg : theme.colors.bgSoft }]}>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: item.publicerad ? theme.colors.publishedText : theme.colors.textMuted }}>
             {item.publicerad ? 'Publicerad' : 'Utkast'}
           </Text>
         </View>
@@ -193,8 +194,8 @@ export default function ManageNewsScreen() {
           style={[styles.actionBtn, { borderColor: theme.colors.border }]}
           activeOpacity={0.7}
         >
-          <Ionicons name="trash-outline" size={16} color="#e53935" />
-          <Text style={[styles.actionBtnText, { color: '#e53935' }]}>Ta bort</Text>
+          <Ionicons name="trash-outline" size={16} color={theme.colors.danger} />
+          <Text style={[styles.actionBtnText, { color: theme.colors.danger }]}>Ta bort</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -220,7 +221,7 @@ export default function ManageNewsScreen() {
 
       {/* Lägg till-knapp */}
       <TouchableOpacity style={[styles.fab, { backgroundColor: theme.colors.primary }]} onPress={openCreate} activeOpacity={0.8}>
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={28} color={theme.colors.buttonText} />
       </TouchableOpacity>
 
       {/* Form-modal */}
@@ -258,7 +259,7 @@ export default function ManageNewsScreen() {
                   ]}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ color: form.typ === t.value ? '#fff' : theme.colors.text, fontWeight: '700' }}>
+                  <Text style={{ color: form.typ === t.value ? theme.colors.buttonText : theme.colors.text, fontWeight: '700' }}>
                     {t.label}
                   </Text>
                 </TouchableOpacity>

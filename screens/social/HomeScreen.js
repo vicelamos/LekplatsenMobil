@@ -20,8 +20,11 @@ import { Ionicons } from '@expo/vector-icons';
 // 🟢 Importera gemensamma komponenter och services
 import { CheckInCard } from '../../src/components/CheckInCard';
 import NewsCard from '../../src/components/NewsCard';
-import { enrichFeed, enrichPlaygroundsWithImages } from '../../src/services/feedService';
+import { enrichFeed, enrichPlaygroundsWithImages, fetchFriendsFeedPage } from '../../src/services/feedService';
 import PlaygroundCard from '../../src/components/PlaygroundCard';
+import { useSponsorImpressions } from '../../src/hooks/useSponsorImpressions';
+import { getPlaygroundsWithSponsors } from '../../src/services/playgroundService';
+import { FeedSkeleton } from '../../src/ui';
 
 import { auth, db } from '../../firebase';
 import {
@@ -33,7 +36,6 @@ import {
   where,
   orderBy,
   limit,
-  startAfter,
 } from 'firebase/firestore';
 
 // Tema & UI
@@ -44,19 +46,20 @@ import { parsePosition, calculateDistance, formatDistance } from '../../utils/ge
 /* Hjälpfunktioner                                                            */
 /* -------------------------------------------------------------------------- */
 
-const chunk = (arr, size) => {
-  const out = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
-};
+const FEED_PAGE_SIZE = 10;
 
-const NEAR_DISTANCE_METERS = 15000; // 15 km
+const DISTANCE_OPTIONS = [
+  { label: '1 km', value: 1000 },
+  { label: '2 km', value: 2000 },
+  { label: '5 km', value: 5000 },
+  { label: '10 km', value: 10000 },
+];
 
 /* -------------------------------------------------------------------------- */
 /* Filter & Sorteringsmodal                                                   */
 /* -------------------------------------------------------------------------- */
 
-const HomeFilterModal = ({ visible, onClose, feedFilter, setFeedFilter, nearbyOnly, setNearbyOnly, hasLocation }) => {
+const HomeFilterModal = ({ visible, onClose, feedFilter, setFeedFilter, maxDistance, setMaxDistance, hasLocation }) => {
   const { theme } = useTheme();
   const [expandedSection, setExpandedSection] = useState(null);
 
@@ -71,8 +74,8 @@ const HomeFilterModal = ({ visible, onClose, feedFilter, setFeedFilter, nearbyOn
   ];
 
   const platsOptions = [
-    { value: false, label: 'Alla platser', icon: 'globe', disabled: false },
-    { value: true, label: `Nära mig (${formatDistance(NEAR_DISTANCE_METERS)})`, icon: 'navigate', disabled: !hasLocation },
+    { value: null, label: 'Alla platser', icon: 'globe', disabled: false },
+    ...DISTANCE_OPTIONS.map(opt => ({ value: opt.value, label: opt.label, icon: 'navigate', disabled: !hasLocation })),
   ];
 
   if (!visible) return null;
@@ -227,6 +230,7 @@ const hmStyles = StyleSheet.create({
 export default function HomeScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const { onViewableItemsChanged, viewabilityConfig } = useSponsorImpressions();
 
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
@@ -237,7 +241,8 @@ export default function HomeScreen() {
 
   // Infinite scroll-state
   const [loadingMore, setLoadingMore] = useState(false);
-  const [lastVisible, setLastVisible] = useState(null);
+  // En markör per chunk av vänlistan – se utils/feedPaging.js
+  const [feedCursors, setFeedCursors] = useState(null);
   const [hasMore, setHasMore] = useState(true);
 
   // Filterstate för flödet
@@ -278,25 +283,15 @@ export default function HomeScreen() {
 
       const friendIds = currentUserData.friends || [];
 
-      // Hämta lekplatser, sponsors och nyheter parallellt
-      const [pgSnapshot, sponsorSnap, nyhetSnap] = await Promise.all([
-        getDocs(collection(db, 'lekplatser')),
-        getDocs(collection(db, 'sponsors')),
+      // Lekplatser + sponsorer kommer cachade från servicelagret, nyheterna
+      // hämtas parallellt.
+      const [playgrounds, nyhetSnap] = await Promise.all([
+        getPlaygroundsWithSponsors(),
         getDocs(query(collection(db, 'nyheter'), where('publicerad', '==', true), orderBy('skapadAt', 'desc'), limit(20))),
       ]);
 
       setNewsFeed(nyhetSnap.docs.map(d => ({ id: d.id, type: 'news', ...d.data() })));
-      const sponsorMap = {};
-      sponsorSnap.docs.forEach(d => { sponsorMap[d.id] = { id: d.id, ...d.data() }; });
-      const allPlaygrounds = pgSnapshot.docs
-        .map((d) => {
-          const data = d.data();
-          const sponsorData = data.sponsorship?.active && data.sponsorship?.sponsorId
-            ? sponsorMap[data.sponsorship.sponsorId] || null
-            : null;
-          return { id: d.id, ...data, sponsorName: sponsorData?.name || null, sponsorData };
-        })
-        .filter((p) => p.status !== 'review');
+      const allPlaygrounds = playgrounds.filter((p) => p.status !== 'review');
 
       let discoverList = [];
       if (userLocation) {
@@ -327,32 +322,15 @@ export default function HomeScreen() {
         return;
       }
 
-      const idChunks = chunk(userAndFriendsIds, 10);
-      const pageSize = 10;
-      const allResults = [];
-      let lastDocForPaging = null;
+      const { items, cursors, hasMore: merFinns } = await fetchFriendsFeedPage({
+        userIds: userAndFriendsIds,
+        pageSize: FEED_PAGE_SIZE,
+      });
 
-      for (const ids of idChunks) {
-        const q1 = query(
-          collection(db, 'incheckningar'),
-          where('userId', 'in', ids),
-          orderBy('timestamp', 'desc'),
-          limit(pageSize)
-        );
-        const snap = await getDocs(q1);
-        if (snap.docs.length > 0) {
-          lastDocForPaging = snap.docs[snap.docs.length - 1];
-          snap.docs.forEach((d) => allResults.push({ id: d.id, ...d.data() }));
-        }
-      }
+      setFeedCursors(cursors);
+      setHasMore(merFinns);
 
-      allResults.sort((a, b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0));
-      const page = allResults.slice(0, pageSize);
-
-      setLastVisible(lastDocForPaging);
-      setHasMore(page.length === pageSize);
-
-      const finalFeed = await enrichFeed(page);
+      const finalFeed = await enrichFeed(items);
       setCheckInFeed(finalFeed);
     } catch (error) {
       console.error('Fel vid hämtning av Hemskärmsdata:', error);
@@ -362,38 +340,22 @@ export default function HomeScreen() {
   };
 
   const fetchMoreCheckIns = async () => {
-    if (loadingMore || !hasMore || !lastVisible) return;
+    if (loadingMore || !hasMore || !feedCursors) return;
     setLoadingMore(true);
     try {
       const friendIds = userData?.friends || [];
       const userAndFriendsIds = [...friendIds, userId];
-      const idChunks = chunk(userAndFriendsIds, 10);
-      const pageSize = 10;
-      const allResults = [];
-      let newLastDoc = null;
 
-      for (const ids of idChunks) {
-        const qNext = query(
-          collection(db, 'incheckningar'),
-          where('userId', 'in', ids),
-          orderBy('timestamp', 'desc'),
-          startAfter(lastVisible),
-          limit(pageSize)
-        );
-        const snap = await getDocs(qNext);
-        if (snap.docs.length) {
-          newLastDoc = snap.docs[snap.docs.length - 1];
-          snap.docs.forEach((d) => allResults.push({ id: d.id, ...d.data() }));
-        }
-      }
+      const { items, cursors, hasMore: merFinns } = await fetchFriendsFeedPage({
+        userIds: userAndFriendsIds,
+        pageSize: FEED_PAGE_SIZE,
+        cursors: feedCursors,
+      });
 
-      allResults.sort((a, b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0));
-      const page = allResults.slice(0, pageSize);
+      setFeedCursors(cursors);
+      setHasMore(merFinns);
 
-      if (newLastDoc) setLastVisible(newLastDoc);
-      setHasMore(page.length === pageSize);
-
-      const newFinalFeed = await enrichFeed(page);
+      const newFinalFeed = await enrichFeed(items);
       setCheckInFeed((prev) => [...prev, ...newFinalFeed]);
     } catch (error) {
       console.error('Fel vid hämtning av mer data:', error);
@@ -487,7 +449,11 @@ export default function HomeScreen() {
     return combined;
   }, [checkInFeed, newsFeed, feedFilter, nearbyOnly, userId, userLocation]);
 
-  const Header = () => {
+  // useCallback, inte en vanlig funktion: en ny funktionsidentitet vid varje
+  // render gör att React ser en ny komponenttyp och monterar om hela headern.
+  // Då startas synlighetstimern för sponsorkorten om, och tidigare räknades
+  // varje visning på nytt vid varje filterklick och feed-uppdatering.
+  const Header = useCallback(() => {
     const displayName = userData?.smeknamn || 'Hej!';
     const profileUrl = userData?.profilbildUrl;
     const fallbackInitial = (displayName || 'A').trim().charAt(0).toUpperCase();
@@ -509,16 +475,25 @@ export default function HomeScreen() {
         </View>
 
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Lekplatser nära dig</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: theme.space.xl }}>
-          {discoverPlaygrounds.map((item) => (
+        {/* FlatList i stället för ScrollView: en ScrollView monterar alla kort
+            direkt, så varje sponsor räknades som visad även om användaren
+            aldrig scrollade i sidled. FlatList kan rapportera synlighet. */}
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: theme.space.xl }}
+          data={discoverPlaygrounds}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
             <PlaygroundCard
-              key={item.id}
               item={item}
               userLocation={userLocation}
               style={{ width: 260, height: 160, marginRight: 12 }}
             />
-          ))}
-        </ScrollView>
+          )}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+        />
 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: theme.space.lg, marginBottom: 8 }}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text, marginBottom: 0 }]}>Senaste äventyren</Text>
@@ -535,12 +510,15 @@ export default function HomeScreen() {
         </View>
       </View>
     );
-  };
+  }, [
+    theme, navigation, userData, discoverPlaygrounds, userLocation,
+    hasActiveFilters, onViewableItemsChanged, viewabilityConfig,
+  ]);
 
   if (loading && checkInFeed.length === 0) {
     return (
-      <SafeAreaView style={[styles.center, { backgroundColor: theme.colors.bg }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
+        <FeedSkeleton count={3} />
       </SafeAreaView>
     );
   }
@@ -559,7 +537,7 @@ export default function HomeScreen() {
       <FlatList
         data={filteredFeed}
         keyExtractor={(item) => item.type === 'news' ? `news-${item.id}` : item.id}
-        ListHeaderComponent={<Header />}
+        ListHeaderComponent={Header}
         renderItem={({ item }) => {
           if (item.type === 'news') {
             return <NewsCard item={item} />;

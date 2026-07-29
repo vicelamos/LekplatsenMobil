@@ -1,15 +1,48 @@
-import { 
-  onDocumentCreated, 
-  onDocumentWritten, 
-  onDocumentUpdated 
+import {
+  onDocumentCreated,
+  onDocumentWritten,
+  onDocumentUpdated,
+  onDocumentDeleted
 } from "firebase-functions/v2/firestore";
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { logger } from "firebase-functions";
 
 // 1. Initiera Admin SDK
 initializeApp();
 const db = getFirestore();
+
+/**
+ * Rate limiting helper.
+ * Kontrollerar om en användare har överskridit maxantal åtgärder inom en tidsperiod.
+ * @param {string} userId
+ * @param {string} action - t.ex. 'checkin', 'comment'
+ * @param {number} maxActions - max antal per period
+ * @param {number} periodMs - tidsperiod i millisekunder (default 1 timme)
+ * @returns {Promise<boolean>} true om begränsningen är överskriden
+ */
+async function isRateLimited(userId, action, maxActions = 10, periodMs = 3600000) {
+  const cutoff = new Date(Date.now() - periodMs);
+  const rateLimitRef = db.collection('_rateLimits').doc(`${userId}_${action}`);
+  const doc = await rateLimitRef.get();
+
+  if (doc.exists) {
+    const data = doc.data();
+    // Filtrera bort gamla timestamps
+    const recentActions = (data.timestamps || []).filter(t => t.toDate() > cutoff);
+    if (recentActions.length >= maxActions) {
+      logger.warn(`Rate limit: ${userId} har nått max ${maxActions} ${action} per timme`);
+      return true;
+    }
+    // OBS: serverTimestamp() går inte att använda inuti en array i Firestore.
+    // Använd Timestamp.now() (funktionens serverklocka) istället.
+    await rateLimitRef.update({ timestamps: [...recentActions, Timestamp.now()] });
+  } else {
+    await rateLimitRef.set({ timestamps: [Timestamp.now()] });
+  }
+  return false;
+}
 
 /**
  * FUNKTION 1: Uppdatera statistik vid incheckning
@@ -27,6 +60,12 @@ export const updateUserAndPlaygroundStats = onDocumentCreated(
     // Validering: Avbryt om viktiga ID:n saknas
     if (!lekplatsId || !userId) {
       logger.warn(`Avbryter: Saknar data för checkin ${event.params.checkinId}`);
+      return null;
+    }
+
+    // Rate limiting: max 20 incheckningar per timme per användare
+    if (await isRateLimited(userId, 'checkin', 20)) {
+      logger.warn(`Rate limit nådd för checkin av ${userId}`);
       return null;
     }
 
@@ -99,6 +138,269 @@ export const updateUserAndPlaygroundStats = onDocumentCreated(
     } catch (error) {
       logger.error("❌ Fel i updateUserAndPlaygroundStats:", error);
     }
+    return null;
+  }
+);
+
+
+/**
+ * FUNKTION 1b: Städa upp när en incheckning raderas
+ *
+ * Firestore kaskadraderar inte: utan den här funktionen skulle en radering
+ * lämna lekplatsens snittbetyg och antalIncheckningar för högt, användarens
+ * totalCheckinCount fel, kommentarerna kvar som föräldralösa dokument och
+ * bilden kvar i Storage.
+ *
+ * OBS: klarade utmaningar och redan upplåsta troféer rullas INTE tillbaka.
+ * Samma utmaning kan vara klarad via flera incheckningar, och en trofé som
+ * tagits bort i efterhand är en sämre användarupplevelse än en som står kvar.
+ */
+export const onCheckinDeleted = onDocumentDeleted(
+  "incheckningar/{checkinId}",
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return null;
+
+    const data = snap.data();
+    const { lekplatsId, userId, betyg } = data;
+    const checkinId = event.params.checkinId;
+
+    const numericBetyg = typeof betyg === "number" ? betyg : parseFloat(betyg || 0);
+    const validBetyg = isNaN(numericBetyg) ? 0 : numericBetyg;
+
+    // 1. Rulla tillbaka statistiken
+    if (lekplatsId && userId) {
+      const playgroundRef = db.collection("lekplatser").doc(lekplatsId);
+      const userRef = db.collection("users").doc(userId);
+      const processedRef = db.collection("_processedEvents").doc(event.id);
+
+      try {
+        await db.runTransaction(async (tx) => {
+          // Idempotens – v2 levererar "at least once"
+          const processedSnap = await tx.get(processedRef);
+          if (processedSnap.exists) return;
+
+          const [pgSnap, userSnap] = await Promise.all([
+            tx.get(playgroundRef),
+            tx.get(userRef),
+          ]);
+
+          if (pgSnap.exists) {
+            const pgData = pgSnap.data();
+            // Math.max skyddar mot att gamla incheckningar från innan
+            // räknarna fanns drar siffrorna under noll.
+            const newTotalCheckins = Math.max(0, (pgData.antalIncheckningar || 0) - 1);
+            const newTotalBetygSum = Math.max(0, (pgData.totalBetygSum || 0) - validBetyg);
+            const newAverage = newTotalCheckins > 0 ? (newTotalBetygSum / newTotalCheckins) : 0;
+
+            tx.set(playgroundRef, {
+              antalIncheckningar: newTotalCheckins,
+              totalBetygSum: newTotalBetygSum,
+              snittbetyg: Number(newAverage.toFixed(2)),
+            }, { merge: true });
+          }
+
+          if (userSnap.exists) {
+            const newCount = Math.max(0, (userSnap.data().totalCheckinCount || 0) - 1);
+            tx.set(userRef, { totalCheckinCount: newCount }, { merge: true });
+          }
+
+          tx.set(processedRef, { processedAt: FieldValue.serverTimestamp() });
+        });
+      } catch (error) {
+        logger.error(`❌ Kunde inte rulla tillbaka statistik för ${checkinId}:`, error);
+      }
+
+      // 2. Ta bort lekplatsen ur besökslistan om det var sista incheckningen där.
+      //    Görs utanför transaktionen: dokumentet är redan borta, så frågan
+      //    speglar läget efter raderingen.
+      try {
+        const kvar = await db.collection("incheckningar")
+          .where("userId", "==", userId)
+          .where("lekplatsId", "==", lekplatsId)
+          .limit(1)
+          .get();
+
+        if (kvar.empty) {
+          await db.collection("users").doc(userId).set({
+            visitedPlaygroundIds: FieldValue.arrayRemove(lekplatsId),
+          }, { merge: true });
+        }
+      } catch (error) {
+        logger.error(`❌ Kunde inte uppdatera visitedPlaygroundIds för ${userId}:`, error);
+      }
+    }
+
+    // 3. Radera kommentarerna. Underkollektioner överlever sitt föräldradokument.
+    try {
+      await db.recursiveDelete(db.collection("incheckningar").doc(checkinId));
+    } catch (error) {
+      logger.error(`❌ Kunde inte radera kommentarer för ${checkinId}:`, error);
+    }
+
+    // 4. Radera incheckningsbilden ur Storage
+    if (userId) {
+      try {
+        await getStorage().bucket().deleteFiles({
+          prefix: `images/checkins/${userId}/${checkinId}/`,
+        });
+      } catch (error) {
+        logger.error(`❌ Kunde inte radera bilder för ${checkinId}:`, error);
+      }
+    }
+
+    logger.info(`🧹 Städning klar efter raderad incheckning ${checkinId}`);
+    return null;
+  }
+);
+
+
+/* -------------------------------------------------------------------------- */
+/* Anonymisering vid kontoradering                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Värdena speglar utils/anonymization.js i appen. De kan inte importeras
+ * därifrån — functions/ deployas som ett eget paket och ser inte appens filer.
+ * Ändras de på ena stället måste de ändras på det andra.
+ */
+const ANONYMIZED_USER_ID = "anonymiserad";
+const ANONYMIZED_DISPLAY_NAME = "Borttagen användare";
+
+/** Plockar ut lagringssökvägen ur en Firebase-nedladdnings-URL. */
+function storagePathFromDownloadUrl(url) {
+  if (!url || typeof url !== "string") return null;
+  if (!url.startsWith("https://firebasestorage.googleapis.com/")) return null;
+  const start = url.indexOf("/o/");
+  if (start === -1) return null;
+  const encoded = url.slice(start + 3).split("?")[0];
+  if (!encoded) return null;
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Gamla schemat hade UID i sökvägen: images/checkins/{uid}/{checkinId}/{fil}
+ * (fem segment). Nya har fyra och innehåller inget UID.
+ */
+function isLegacyCheckinImagePath(path) {
+  if (!path || !path.startsWith("images/checkins/")) return false;
+  return path.split("/").length === 5;
+}
+
+/** Commitar uppdateringar i portioner – en batch rymmer 500 skrivningar. */
+async function commitInChunks(docs, applyTo, chunkSize = 400) {
+  for (let i = 0; i < docs.length; i += chunkSize) {
+    const batch = db.batch();
+    for (const d of docs.slice(i, i + chunkSize)) applyTo(batch, d);
+    await batch.commit();
+  }
+}
+
+/**
+ * Anonymiserar allt innehåll som pekar på en användare när kontot raderas.
+ *
+ * Incheckningarna ligger kvar med flit — de bär betyg och foton som andra har
+ * nytta av, och de kan vara kommenterade. Det som försvinner är kopplingen
+ * till personen. Ett kvarvarande UID räknas som personuppgift, så det räcker
+ * inte att bara byta ut smeknamnet.
+ */
+export const anonymizeDeletedUser = onDocumentDeleted(
+  "users/{userId}",
+  async (event) => {
+    const userId = event.params.userId;
+    const bucket = getStorage().bucket();
+
+    // 1. Personens egna incheckningar
+    try {
+      const egna = await db.collection("incheckningar")
+        .where("userId", "==", userId).get();
+
+      await commitInChunks(egna.docs, (batch, d) => {
+        const uppdatering = {
+          userId: ANONYMIZED_USER_ID,
+          userSmeknamn: ANONYMIZED_DISPLAY_NAME,
+        };
+        // Bilder på det gamla schemat har UID:t i sin publika URL och måste bort.
+        // Nya bilder ligger på en neutral sökväg och kan vara kvar.
+        const path = storagePathFromDownloadUrl(d.data().bildUrl);
+        if (isLegacyCheckinImagePath(path)) uppdatering.bildUrl = "";
+        batch.update(d.ref, uppdatering);
+      });
+
+      logger.info(`Anonymiserade ${egna.size} egna incheckningar för ${userId}`);
+    } catch (error) {
+      logger.error(`❌ Kunde inte anonymisera egna incheckningar för ${userId}:`, error);
+    }
+
+    // 2. Taggningar i ANDRAS incheckningar
+    try {
+      const taggade = await db.collection("incheckningar")
+        .where("taggadeVanner", "array-contains", userId).get();
+
+      await commitInChunks(taggade.docs, (batch, d) => {
+        batch.update(d.ref, { taggadeVanner: FieldValue.arrayRemove(userId) });
+      });
+
+      logger.info(`Tog bort ${taggade.size} taggningar för ${userId}`);
+    } catch (error) {
+      logger.error(`❌ Kunde inte ta bort taggningar för ${userId}:`, error);
+    }
+
+    // 3. Likes i andras incheckningar
+    try {
+      const likeade = await db.collection("incheckningar")
+        .where("likes", "array-contains", userId).get();
+
+      await commitInChunks(likeade.docs, (batch, d) => {
+        batch.update(d.ref, { likes: FieldValue.arrayRemove(userId) });
+      });
+
+      logger.info(`Tog bort ${likeade.size} likes för ${userId}`);
+    } catch (error) {
+      logger.error(`❌ Kunde inte ta bort likes för ${userId}:`, error);
+    }
+
+    // 4. Kommentarer personen skrivit, var de än ligger
+    try {
+      const kommentarer = await db.collectionGroup("comments")
+        .where("userId", "==", userId).get();
+
+      await commitInChunks(kommentarer.docs, (batch, d) => {
+        batch.update(d.ref, { userId: ANONYMIZED_USER_ID });
+      });
+
+      logger.info(`Anonymiserade ${kommentarer.size} kommentarer för ${userId}`);
+    } catch (error) {
+      logger.error(`❌ Kunde inte anonymisera kommentarer för ${userId}:`, error);
+    }
+
+    // 5. Vänlistor hos andra användare
+    try {
+      const vanner = await db.collection("users")
+        .where("friends", "array-contains", userId).get();
+
+      await commitInChunks(vanner.docs, (batch, d) => {
+        batch.update(d.ref, { friends: FieldValue.arrayRemove(userId) });
+      });
+
+      logger.info(`Tog bort ${userId} ur ${vanner.size} vänlistor`);
+    } catch (error) {
+      logger.error(`❌ Kunde inte städa vänlistor för ${userId}:`, error);
+    }
+
+    // 6. Bilder: gamla incheckningsbilder med UID i sökvägen, samt profilbilden
+    try {
+      await bucket.deleteFiles({ prefix: `images/checkins/${userId}/` });
+      await bucket.file(`profilbilder/${userId}`).delete({ ignoreNotFound: true });
+    } catch (error) {
+      logger.error(`❌ Kunde inte radera bilder för ${userId}:`, error);
+    }
+
+    logger.info(`🧹 Anonymisering klar för ${userId}`);
     return null;
   }
 );
@@ -308,6 +610,8 @@ export const checkTrophies = onDocumentUpdated("users/{userId}", async (event) =
   const trophiesSnapshot = await db.collection("trophies").get();
   const batch = db.batch();
   let trophiesChanged = 0;
+  // Håller reda på vilket level-value som sätts för varje trofé i detta batch
+  const effectiveLevelValues = {};
 
   trophiesSnapshot.forEach(trophyDoc => {
     const trophy = trophyDoc.data();
@@ -344,6 +648,9 @@ export const checkTrophies = onDocumentUpdated("users/{userId}", async (event) =
 
     const currentLevel = unlockedMap[trophyId]?.level || 0;
 
+    // Spara effektivt level-value för räkning nedan (oavsett om det är nytt eller ej)
+    effectiveLevelValues[trophyId] = newLevelData.value;
+
     // Om ny nivå uppnåtts
     if (newLevelData.value > currentLevel) {
       trophiesChanged++;
@@ -374,7 +681,21 @@ export const checkTrophies = onDocumentUpdated("users/{userId}", async (event) =
   });
 
   if (trophiesChanged > 0) {
-    logger.info(`Utdelat ${trophiesChanged} troféer till ${userId}`);
+    // Räkna totalt antal uppnådda nivåer — varje nivå räknas som en egen trofé.
+    // Använd effectiveLevelValues för trofeer som uppdateras nu, annars unlockedMap.
+    let totalLevels = 0;
+    trophiesSnapshot.forEach(trophyDoc => {
+      const trophyId = trophyDoc.id;
+      const levels = trophyDoc.data().levels;
+      if (!Array.isArray(levels)) return;
+      const levelValue = effectiveLevelValues[trophyId] ?? unlockedMap[trophyId]?.level ?? 0;
+      if (levelValue === 0) return;
+      totalLevels += levels.filter(l => l.value <= levelValue).length;
+    });
+
+    const userRef = db.doc(`users/${userId}`);
+    batch.update(userRef, { unlockedTrophiesCount: totalLevels });
+    logger.info(`Utdelat ${trophiesChanged} troféer till ${userId}, totalt ${totalLevels} nivåer`);
     return batch.commit();
   }
   return null;
@@ -574,6 +895,82 @@ export const notifyAdminsOnSuggestion = onDocumentCreated(
     } catch (e) {
       logger.error("Fel vid admin-notis (ändringsförslag):", e);
     }
+  }
+);
+
+// ---------- RAPPORTER ----------
+
+/**
+ * FUNKTION: Notifiera admins när en ny rapport skapas
+ */
+export const notifyAdminsOnReport = onDocumentCreated(
+  "rapporter/{rapportId}",
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const data = snap.data();
+    const typeLabel = data.type === 'comment' ? 'kommentar' : 'incheckning';
+
+    try {
+      const adminsSnap = await db.collection("users").where("isAdmin", "==", true).get();
+      if (adminsSnap.empty) return;
+
+      const batch = db.batch();
+      adminsSnap.forEach((adminDoc) => {
+        const notifRef = db.collection("users").doc(adminDoc.id).collection("notifications").doc();
+        batch.set(notifRef, {
+          type: "ADMIN_REPORT",
+          title: "Ny rapport inkommit",
+          message: `En användare har rapporterat en ${typeLabel}: "${data.reason}".`,
+          read: false,
+          createdAt: FieldValue.serverTimestamp(),
+          link: "ManageReports",
+        });
+      });
+      await batch.commit();
+      logger.info(`Admin-notiser skickade för ny rapport: ${event.params.rapportId}`);
+    } catch (e) {
+      logger.error("Fel vid admin-notis (rapport):", e);
+    }
+  }
+);
+
+/**
+ * FUNKTION: Notifiera rapportören när rapporten hanteras (granskad eller avvisad)
+ */
+export const notifyReporterOnReportUpdate = onDocumentUpdated(
+  "rapporter/{rapportId}",
+  async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+
+    if (before.status === after.status) return null;
+    if (after.status !== "reviewed" && after.status !== "dismissed") return null;
+
+    const reportedByUserId = after.reportedByUserId;
+    if (!reportedByUserId) return null;
+
+    const isDismissed = after.status === "dismissed";
+    const typeLabel = after.type === 'comment' ? 'kommentaren' : 'inlägget';
+
+    try {
+      const notifRef = db.collection("users").doc(reportedByUserId).collection("notifications").doc();
+      await notifRef.set({
+        type: "REPORT_UPDATE",
+        title: isDismissed ? "Rapport avvisad" : "Rapport genomförd",
+        message: isDismissed
+          ? `Din rapport om ${typeLabel} har granskats och avvisats.`
+          : `Din rapport om ${typeLabel} har granskats och åtgärdats.`,
+        read: false,
+        createdAt: FieldValue.serverTimestamp(),
+        link: "Notifications",
+      });
+      logger.info(`Rapportör ${reportedByUserId} notifierad om status: ${after.status}`);
+    } catch (e) {
+      logger.error("Fel vid notis till rapportör:", e);
+    }
+    return null;
   }
 );
 

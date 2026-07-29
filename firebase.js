@@ -23,19 +23,23 @@ const devConfig = {
 
 // Production configuration
 const prodConfig = {
-  apiKey: Constants.expoConfig?.extra?.prodFirebaseApiKey || process.env.PROD_FIREBASE_API_KEY || "AIzaSyDc4x-o1UdumBWqgbsz82ZyJRi_wPrH80U",
-  authDomain: Constants.expoConfig?.extra?.prodFirebaseAuthDomain || process.env.PROD_FIREBASE_AUTH_DOMAIN || "lekplatsen-907fb.firebaseapp.com",
-  projectId: Constants.expoConfig?.extra?.prodFirebaseProjectId || process.env.PROD_FIREBASE_PROJECT_ID || "lekplatsen-907fb",
-  storageBucket: Constants.expoConfig?.extra?.prodFirebaseStorageBucket || process.env.PROD_FIREBASE_STORAGE_BUCKET || "lekplatsen-907fb.firebasestorage.app",
-  messagingSenderId: Constants.expoConfig?.extra?.prodFirebaseMessagingSenderId || process.env.PROD_FIREBASE_MESSAGING_SENDER_ID || "802816415281",
-  appId: Constants.expoConfig?.extra?.prodFirebaseAppId || process.env.PROD_FIREBASE_APP_ID || "1:802816415281:web:0f5eab57a99443b8d46710",
+  apiKey: Constants.expoConfig?.extra?.prodFirebaseApiKey || process.env.PROD_FIREBASE_API_KEY,
+  authDomain: Constants.expoConfig?.extra?.prodFirebaseAuthDomain || process.env.PROD_FIREBASE_AUTH_DOMAIN,
+  projectId: Constants.expoConfig?.extra?.prodFirebaseProjectId || process.env.PROD_FIREBASE_PROJECT_ID,
+  storageBucket: Constants.expoConfig?.extra?.prodFirebaseStorageBucket || process.env.PROD_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: Constants.expoConfig?.extra?.prodFirebaseMessagingSenderId || process.env.PROD_FIREBASE_MESSAGING_SENDER_ID,
+  appId: Constants.expoConfig?.extra?.prodFirebaseAppId || process.env.PROD_FIREBASE_APP_ID,
 };
 
 // Select config based on environment
 const firebaseConfig = ENV === 'production' ? prodConfig : devConfig;
 
-console.log(`🔥 Firebase initialized in ${ENV} mode`);
-console.log(`📦 Using project: ${firebaseConfig.projectId}`);
+// Validate that all required config fields are present
+const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+const missingFields = requiredFields.filter(field => !firebaseConfig[field]);
+if (missingFields.length > 0) {
+  throw new Error(`Firebase-konfiguration saknar fält: ${missingFields.join(', ')}. Kontrollera dina miljövariabler.`);
+}
 
 // Initiera Firebase
 const app = initializeApp(firebaseConfig);

@@ -35,6 +35,19 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../src/theme';
 import { Card } from '../../src/ui';
 
+// ---- Fuzzy-matchning för sökning ----
+// Returnerar true om query matchar candidate, med tolerans för 1 stavfel.
+// Strategi: exakt delmatchning ELLER prova att ta bort ett tecken i taget från query.
+const fuzzyMatch = (query, candidate) => {
+  if (!candidate || !query) return false;
+  if (candidate.includes(query)) return true;
+  for (let i = 0; i < query.length; i++) {
+    const variant = query.slice(0, i) + query.slice(i + 1);
+    if (variant.length > 0 && candidate.includes(variant)) return true;
+  }
+  return false;
+};
+
 // ---- Header för vänlistan (memo) ----
 const FriendsListHeader = React.memo(function FriendsListHeader({
   searchQuery,
@@ -239,7 +252,9 @@ function FriendsScreen() {
     }
     setIsSearching(true);
     try {
-      const prefix = trimmed.toLowerCase();
+      const lower = trimmed.toLowerCase();
+      // Use only the first 2 chars as prefix to cast a wider net for fuzzy matching
+      const prefix = lower.substring(0, 2);
       const q = query(
         collection(db, 'users'),
         where('smeknamnLower', '>=', prefix),
@@ -248,7 +263,7 @@ function FriendsScreen() {
       const querySnapshot = await getDocs(q);
       const results = querySnapshot.docs
         .map((docSnap) => ({ uid: docSnap.id, ...docSnap.data() }))
-        .filter((user) => user.uid !== userId);
+        .filter((user) => user.uid !== userId && fuzzyMatch(lower, user.smeknamnLower || ''));
       setSearchResults(results);
     } catch (error) {
       console.error('Sökfel:', error);

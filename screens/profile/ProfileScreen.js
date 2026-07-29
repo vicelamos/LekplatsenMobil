@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../firebase';
 import { signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { doc, getDoc, collection, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme';
 import { Card } from '../../src/ui';
@@ -37,6 +37,7 @@ function ProfileScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const userId = auth.currentUser?.uid;
 
@@ -95,6 +96,47 @@ function ProfileScreen() {
       } else {
         Alert.alert('Fel', 'Kunde inte radera kontot. Försök igen.');
       }
+    }
+  };
+
+  const handleExportData = async () => {
+    if (exportLoading || !userId) return;
+    setExportLoading(true);
+    try {
+      // Samla in all användardata
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      const userData = userDoc.exists() ? userDoc.data() : {};
+
+      // Incheckningar
+      const checkinsSnap = await getDocs(query(collection(db, 'incheckningar'), where('userId', '==', userId)));
+      const checkins = checkinsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Troféer
+      const trophiesSnap = await getDocs(collection(db, 'users', userId, 'unlockedTrophies'));
+      const trophies = trophiesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Klarade utmaningar
+      const challengesSnap = await getDocs(collection(db, 'users', userId, 'klaradeUtmaningar'));
+      const challenges = challengesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      const exportData = {
+        exportDatum: new Date().toISOString(),
+        profil: userData,
+        incheckningar: checkins,
+        trofeer: trophies,
+        klaradeUtmaningar: challenges,
+      };
+
+      // Dela som JSON via delningsdialogrutan
+      const { Share } = require('react-native');
+      await Share.share({
+        message: JSON.stringify(exportData, null, 2),
+        title: 'Min data från Lekplatsen',
+      });
+    } catch (error) {
+      Alert.alert('Fel', 'Kunde inte exportera data. Försök igen.');
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -245,7 +287,7 @@ function ProfileScreen() {
             style={styles.logoutBtn}
             activeOpacity={0.8}
           >
-            <Text style={{ color: '#fff', fontWeight: '800' }}>Logga ut</Text>
+            <Text style={{ color: theme.colors.buttonText, fontWeight: '800' }}>Logga ut</Text>
           </TouchableOpacity>
           <Text style={{ textAlign: 'center', color: theme.colors.textMuted, fontSize: 12, marginTop: 16 }}>
             Version {Constants.expoConfig?.version ?? '–'}
@@ -256,6 +298,23 @@ function ProfileScreen() {
           >
             <Text style={{ color: theme.colors.textMuted, fontSize: 12, textDecorationLine: 'underline' }}>
               Sekretesspolicy
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/Policy%2FAnv%C3%A4ndarvillkor%20f%C3%B6r%20Lekplatsen.pdf?alt=media')}
+            style={{ marginTop: 8, alignItems: 'center' }}
+          >
+            <Text style={{ color: theme.colors.textMuted, fontSize: 12, textDecorationLine: 'underline' }}>
+              Användarvillkor
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleExportData}
+            disabled={exportLoading}
+            style={{ marginTop: 16, alignItems: 'center' }}
+          >
+            <Text style={{ color: theme.colors.link, fontSize: 13 }}>
+              {exportLoading ? 'Exporterar...' : 'Exportera min data'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -289,7 +348,7 @@ function ProfileScreen() {
               onPress={handleDeleteAccount}
               disabled={!deletePassword || deleteLoading}
             >
-              <Text style={{ color: '#fff', fontWeight: '700' }}>{deleteLoading ? 'Raderar...' : 'Radera mitt konto'}</Text>
+              <Text style={{ color: theme.colors.buttonText, fontWeight: '700' }}>{deleteLoading ? 'Raderar...' : 'Radera mitt konto'}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={{ marginTop: 12, alignItems: 'center' }}>
               <Text style={{ color: theme.colors.textMuted }}>Avbryt</Text>
@@ -375,7 +434,7 @@ const getStyles = (theme) =>
     modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 12 },
     modalBody: { fontSize: 14, lineHeight: 20, marginBottom: 16 },
     passwordInput: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 16 },
-    deleteBtn: { backgroundColor: '#ef4444', padding: 14, borderRadius: 12, alignItems: 'center' },
+    deleteBtn: { backgroundColor: theme.colors.danger, padding: 14, borderRadius: 12, alignItems: 'center' },
   });
 
 export default ProfileScreen;

@@ -34,6 +34,10 @@ export const Input = forwardRef(
       rightIcon,
       onPressRight,
 
+      // Accessibility
+      accessibilityLabel,
+      accessibilityHint,
+
       // Any extra props should pass through to TextInput:
       ...rest
     },
@@ -88,6 +92,8 @@ export const Input = forwardRef(
           blurOnSubmit={blurOnSubmit}
           onFocus={onFocus}
           onBlur={onBlur}
+          accessibilityLabel={accessibilityLabel || placeholder}
+          accessibilityHint={accessibilityHint}
           allowFontScaling
           importantForAutofill="yes"
           disableFullscreenUI

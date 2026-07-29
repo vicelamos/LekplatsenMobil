@@ -1,0 +1,11 @@
+{
+  "_kommentar": "Egen emulatorkonfiguration för läsbudgettesterna. Annan port än firebase.json så att regel- och perfsviterna aldrig kan krocka — på Windows överlever emulatorns java-process ibland emulators:exec och blockerar porten för nästa körning.",
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "emulators": {
+    "firestore": { "port": 8081 },
+    "hub": { "port": 4401 },
+    "ui": { "enabled": false }
+  }
+}

@@ -5,3 +5,4 @@ export { Input } from './Input';
 export { Chip } from './Chip';
 export { PatternBackground } from './PatternBackground';
 export { Avatar } from './Avatar';
+export { Skeleton, FeedSkeleton } from './Skeleton';

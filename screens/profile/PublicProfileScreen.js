@@ -49,13 +49,10 @@ function PublicProfileScreen({ route }) {
     const fetchUser = async () => {
       try {
         const snap = await getDoc(doc(db, 'users', userId));
-        if (snap.exists()) setUser(snap.data());
-        // Troféer är bara läsbara av ägaren — faller tillbaka till 0 annars
-        try {
-          const trophySnap = await getDocs(collection(db, 'users', userId, 'unlockedTrophies'));
-          setTrophyCount(trophySnap.size);
-        } catch {
-          setTrophyCount(0);
+        if (snap.exists()) {
+          const data = snap.data();
+          setUser(data);
+          setTrophyCount(data.unlockedTrophiesCount || 0);
         }
       } catch (e) {
         console.warn('Kunde inte hämta användare:', e);

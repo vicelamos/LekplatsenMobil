@@ -3,12 +3,25 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Incheckningsbilder — userId i sökvägen enforcar ägarskap
-    match /images/checkins/{userId}/{checkinId}/{fileName} {
+    // Incheckningsbilder. Sökvägen innehåller MEDVETET inte användarens UID:
+    // den hamnar i den publika bildUrl:en och skulle göra bilden spårbar
+    // tillbaka till personen även efter att kontot anonymiserats.
+    // Ägarskapet kontrolleras i stället mot incheckningsdokumentet — samma
+    // mönster som lekplatsbilderna nedan. Dokumentet skapas före uppladdningen.
+    match /images/checkins/{checkinId}/{fileName} {
       allow read;
       allow write: if request.auth != null
-                   && request.auth.uid == userId
-                   && request.resource.size < 15 * 1024 * 1024;
+                   && request.resource.size < 15 * 1024 * 1024
+                   && firestore.get(/databases/(default)/documents/incheckningar/$(checkinId)).data.userId == request.auth.uid;
+    }
+
+    // Gamla incheckningsbilder med UID i sökvägen. Läsning måste finnas kvar,
+    // annars slutar befintliga bildUrl:er att fungera. Skrivning är stängd —
+    // nya bilder går till sökvägen ovan, och anonymiseringsfunktionen raderar
+    // de gamla via admin-SDK:t (som går förbi de här reglerna).
+    match /images/checkins/{userId}/{checkinId}/{fileName} {
+      allow read;
+      allow write: if false;
     }
 
     // Lekplatsbilder — bara admins kan ladda upp

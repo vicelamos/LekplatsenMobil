@@ -21,6 +21,8 @@ import { File } from 'expo-file-system';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import { compressImage, getReadableFileSize } from '../../utils/imageCompression';
+import { uploadBase64 } from '../../src/services/storageService';
+import { invalidatePlaygroundCache } from '../../src/services/playgroundService';
 
 import { auth, db, storage } from '../../firebase';
 import {
@@ -62,7 +64,7 @@ const SelectableChip = ({ label, selected, onPress }) => {
         },
         selected && {
           borderColor: theme.colors.primary,
-          backgroundColor: theme.colors.primarySoft || '#DCFCE7',
+          backgroundColor: theme.colors.primarySoft,
         },
       ]}
     >
@@ -253,32 +255,6 @@ export default function AddPlaygroundScreen({ route, navigation }) {
     }
   };
 
-  // helpers
-  const uploadBase64 = async (storageRef, base64Data) => {
-    const bucket = 'lekplatsen-907fb.firebasestorage.app';
-    const encodedPath = encodeURIComponent(storageRef.fullPath);
-    const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}`;
-    const token = await auth.currentUser?.getIdToken();
-    const binaryStr = atob(base64Data);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) {
-      bytes[i] = binaryStr.charCodeAt(i);
-    }
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error(`Upload failed: ${xhr.status}`));
-      };
-      xhr.onerror = () => reject(new Error('Upload XHR error'));
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'image/jpeg');
-      xhr.setRequestHeader('X-Goog-Upload-Protocol', 'raw');
-      if (token) xhr.setRequestHeader('Authorization', `Firebase ${token}`);
-      xhr.send(bytes);
-    });
-  };
-
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -371,6 +347,8 @@ export default function AddPlaygroundScreen({ route, navigation }) {
     if (!validate()) return;
     try {
       setSaving(true);
+      // Lekplatslistan cachas i servicelagret – tvinga omläsning efter ändring
+      invalidatePlaygroundCache();
 
       const latNum = marker.latitude;
       const lngNum = marker.longitude;
@@ -445,6 +423,7 @@ export default function AddPlaygroundScreen({ route, navigation }) {
         onPress: async () => {
           try {
             await deleteDoc(doc(db, 'lekplatser', playgroundId));
+            invalidatePlaygroundCache();
             Alert.alert('Borttagen', 'Lekplatsen har raderats.');
             navigation.popToTop?.();
           } catch (e) {
@@ -585,7 +564,7 @@ export default function AddPlaygroundScreen({ route, navigation }) {
                   onPress={() => setAllImages(prev => prev.filter((_, i) => i !== index))}
                   style={{ position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 12, padding: 2 }}
                 >
-                  <Ionicons name="close" size={16} color="#fff" />
+                  <Ionicons name="close" size={16} color={theme.colors.buttonText} />
                 </TouchableOpacity>
               </View>
             ))}

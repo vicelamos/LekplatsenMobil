@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Alert, TextInput, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { Card, Chip } from '../ui';
@@ -7,6 +7,7 @@ import FullscreenImageModal from './FullscreenImageModal';
 import { auth, db } from '../../firebase';
 import { doc, updateDoc, arrayUnion, arrayRemove, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import { useAuthGate } from '../hooks/useAuthGate';
 
 const REPORT_REASONS = [
   'Olämpligt innehåll',
@@ -19,6 +20,7 @@ const REPORT_REASONS = [
 export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const requireAuth = useAuthGate();
   const userId = auth.currentUser?.uid;
 
   // States för interaktion
@@ -28,6 +30,7 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedReason, setSelectedReason] = useState(null);
+  const [reportComment, setReportComment] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const hasExtraContent = 
@@ -41,6 +44,7 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
 
   const handleSubmitReport = async () => {
     if (!selectedReason || isSubmittingReport) return;
+    if (!requireAuth()) { setReportModalVisible(false); return; }
     setIsSubmittingReport(true);
     try {
       await addDoc(collection(db, 'rapporter'), {
@@ -49,11 +53,13 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
         reportedUserId: item.userId,
         reportedByUserId: userId,
         reason: selectedReason,
+        comment: reportComment.trim(),
         status: 'pending',
         createdAt: serverTimestamp(),
       });
       setReportModalVisible(false);
       setSelectedReason(null);
+      setReportComment('');
       Alert.alert('Tack', 'Din rapport har skickats och granskas av en administratör.');
     } catch {
       Alert.alert('Fel', 'Kunde inte skicka rapporten. Försök igen.');
@@ -63,16 +69,23 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
   };
 
   const handleLike = async () => {
-    if (!userId) return;
+    if (!requireAuth()) return;
     const checkInRef = doc(db, 'incheckningar', item.id);
-    if (isLiked) {
-      setIsLiked(false);
-      setLikeCount(prev => prev - 1);
-      await updateDoc(checkInRef, { likes: arrayRemove(userId) });
-    } else {
-      setIsLiked(true);
-      setLikeCount(prev => prev + 1);
-      await updateDoc(checkInRef, { likes: arrayUnion(userId) });
+    const wasLiked = isLiked;
+
+    // Optimistisk uppdatering så hjärtat känns direkt – rullas tillbaka om
+    // skrivningen nekas, annars visar kortet en like som aldrig sparades.
+    setIsLiked(!wasLiked);
+    setLikeCount(prev => prev + (wasLiked ? -1 : 1));
+
+    try {
+      await updateDoc(checkInRef, {
+        likes: wasLiked ? arrayRemove(userId) : arrayUnion(userId),
+      });
+    } catch (e) {
+      setIsLiked(wasLiked);
+      setLikeCount(prev => prev + (wasLiked ? 1 : -1));
+      console.warn('CheckInCard: kunde inte spara like', e);
     }
   };
 
@@ -80,9 +93,12 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
     <Card style={styles.card}>
       {/* Header: Profil och Lekplats */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.userInfo}
-          onPress={() => navigation.navigate('PublicProfile', { userId: item.userId })}
+          onPress={() => {
+            if (!requireAuth('PublicProfile', { userId: item.userId })) return;
+            navigation.navigate('PublicProfile', { userId: item.userId });
+          }}
         >
           <Image 
             source={{ uri: item.profilbildUrl || `https://ui-avatars.com/api/?name=${item.userSmeknamn}` }} 
@@ -161,7 +177,13 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
             <Ionicons name={isLiked ? "heart" : "heart-outline"} size={18} color={isLiked ? theme.colors.danger : theme.colors.textMuted} />
             <Text style={[styles.statText, { color: theme.colors.textMuted }]}>{likeCount}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => onPressComments?.(item)} style={styles.statItem}>
+          <TouchableOpacity
+            onPress={() => {
+              if (!requireAuth()) return;
+              onPressComments?.(item);
+            }}
+            style={styles.statItem}
+          >
             <Ionicons name="chatbubble-outline" size={18} color={theme.colors.textMuted} />
             <Text style={[styles.statText, { color: theme.colors.textMuted }]}>{item.commentCount || 0}</Text>
           </TouchableOpacity>
@@ -174,12 +196,28 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              onPress={() => { setSelectedReason(null); setReportModalVisible(true); }}
+              onPress={() => {
+                if (!requireAuth()) return;
+                setSelectedReason(null);
+                setReportComment('');
+                setReportModalVisible(true);
+              }}
               style={styles.statItem}
             >
               <Ionicons name="flag-outline" size={16} color={theme.colors.textMuted} />
             </TouchableOpacity>
           )}
+          <TouchableOpacity
+            onPress={() => {
+              Share.share({
+                message: `Incheckning på ${playgroundName || 'en lekplats'} – Lekplatsen Sverige lekplatsen://checkin/${item.id}`,
+              }).catch(() => {});
+            }}
+            style={styles.statItem}
+            accessibilityLabel="Dela incheckning"
+          >
+            <Ionicons name="share-social-outline" size={16} color={theme.colors.textMuted} />
+          </TouchableOpacity>
         </View>
         <Text style={[styles.date, { color: theme.colors.textMuted }]}>{date}</Text>
       </View>
@@ -204,6 +242,15 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
                 <Text style={[styles.reasonText, { color: theme.colors.text }]}>{reason}</Text>
               </TouchableOpacity>
             ))}
+            <TextInput
+              style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: 8, padding: 10, marginTop: 10, color: theme.colors.text, minHeight: 70, textAlignVertical: 'top', fontSize: 14 }}
+              placeholder="Ytterligare kommentar (valfritt)"
+              placeholderTextColor={theme.colors.textMuted}
+              value={reportComment}
+              onChangeText={setReportComment}
+              multiline
+              maxLength={500}
+            />
             <TouchableOpacity
               style={[styles.submitBtn, { backgroundColor: theme.colors.primary }, (!selectedReason || isSubmittingReport) && { opacity: 0.4 }]}
               onPress={handleSubmitReport}

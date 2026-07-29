@@ -1,6 +1,16 @@
 
+import * as Sentry from '@sentry/react-native';
 import React, { useState, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
+
+import Constants from 'expo-constants';
+
+Sentry.init({
+  dsn: Constants.expoConfig?.extra?.sentryDsn || '',
+  enabled: !__DEV__,
+  sendDefaultPii: true,
+  tracesSampleRate: 0.2,
+});
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -8,10 +18,16 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tema
 import { ThemeProvider, useTheme } from './src/theme';
 import { usePushNotifications, registerPushToken } from './src/hooks/usePushNotifications';
+import ErrorBoundary from './src/components/ErrorBoundary';
+import { OfflineBanner } from './src/components/OfflineBanner';
+import { LoginPromptProvider } from './src/contexts/LoginPrompt';
+import LoginRequiredModal from './src/components/LoginRequiredModal';
+import { navigationRef } from './navigationRef';
 
 // Skärmar
 import LoginScreen from './screens/auth/LoginScreen';
@@ -37,6 +53,7 @@ import ManageSponsorsScreen from './screens/admin/ManageSponsorsScreen';
 import AdminScreen from './screens/admin/AdminScreen';
 import ManageNewsScreen from './screens/admin/ManageNewsScreen';
 import ManageReportsScreen from './screens/admin/ManageReportsScreen';
+import OnboardingScreen, { hasCompletedOnboarding } from './screens/onboarding/OnboardingScreen';
 
 
 
@@ -96,6 +113,7 @@ function AppTabs({ navigation }) {
         name="Hem"
         component={HomeScreen}
         options={{
+          tabBarAccessibilityLabel: 'Hem',
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name={focused ? 'home' : 'home-outline'}
@@ -111,6 +129,7 @@ function AppTabs({ navigation }) {
         name="Sök"
         component={SearchScreen}
         options={{
+          tabBarAccessibilityLabel: 'Sök lekplatser',
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name={focused ? 'search' : 'search-outline'}
@@ -126,6 +145,7 @@ function AppTabs({ navigation }) {
         name="Notiser"
         component={NotificationsScreen}
         options={{
+          tabBarAccessibilityLabel: unreadCount > 0 ? `Notiser, ${unreadCount} olästa` : 'Notiser',
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name={focused ? 'notifications' : 'notifications-outline'}
@@ -142,6 +162,7 @@ function AppTabs({ navigation }) {
         name="Profil"
         component={ProfileScreen}
         options={{
+          tabBarAccessibilityLabel: 'Min profil',
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name={focused ? 'person' : 'person-outline'}
@@ -158,9 +179,6 @@ function AppTabs({ navigation }) {
 
 
 /** NavigationContainer med temats färger (för header/card) */
-// navigation ref used for navigating from outside components (e.g. notification handlers)
-const navigationRef = React.createRef();
-
 function ThemedNavigationContainer({ children }) {
   const { theme, mode } = useTheme();
 
@@ -188,20 +206,134 @@ function ThemedNavigationContainer({ children }) {
         },
       };
 
-  return <NavigationContainer ref={navigationRef} theme={navTheme}>{children}</NavigationContainer>;
+  const linking = {
+    prefixes: ['lekplatsen://'],
+    config: {
+      screens: {
+        AppTabs: {
+          screens: {
+            Hem: 'home',
+            'Sök': 'search',
+            Notiser: 'notifications',
+            Profil: 'profile',
+          },
+        },
+        GuestTabs: {
+          screens: {
+            'Sök': 'search',
+          },
+        },
+        PlaygroundDetails: 'playground/:lekplatsId',
+        Comments: 'checkin/:checkInId',
+        PublicProfile: 'user/:userId',
+        Trophies: 'trophies',
+      },
+    },
+  };
+
+  return <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>{children}</NavigationContainer>;
+}
+
+/** Gäst-tabbar – sök + "logga in"-flik för utloggade användare */
+function GuestTabs() {
+  const { theme } = useTheme();
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarShowLabel: false,
+        headerShown: false,
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: 25,
+          left: 20,
+          right: 20,
+          elevation: 0,
+          backgroundColor: theme.colors.cardBg,
+          borderRadius: 15,
+          height: 90,
+          borderTopWidth: 0,
+          ...styles.shadow,
+        },
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textMuted,
+        sceneStyle: {
+          backgroundColor: theme.colors.bg,
+          paddingBottom: 120,
+        },
+      }}
+    >
+      {/* Sök – startsidan för gäster */}
+      <Tab.Screen
+        name="Sök"
+        component={SearchScreen}
+        options={{
+          tabBarAccessibilityLabel: 'Sök lekplatser',
+          tabBarIcon: ({ focused }) => (
+            <Ionicons
+              name={focused ? 'search' : 'search-outline'}
+              size={30}
+              color={focused ? theme.colors.primary : theme.colors.textMuted}
+            />
+          ),
+        }}
+      />
+
+      {/* Logga in-flik */}
+      <Tab.Screen
+        name="LoggaIn"
+        component={LoginScreen}
+        options={{
+          tabBarAccessibilityLabel: 'Logga in',
+          tabBarIcon: ({ focused }) => (
+            <Ionicons
+              name={focused ? 'log-in' : 'log-in-outline'}
+              size={30}
+              color={focused ? theme.colors.primary : theme.colors.textMuted}
+            />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
 }
 
 /** Huvud-App */
-export default function App() {
+function App() {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   usePushNotifications(navigationRef);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      if (u) registerPushToken(u.uid);
+      // Anonyma användare (gäst-incheckning) behandlas som gäster
+      if (u && !u.isAnonymous) {
+        registerPushToken(u.uid);
+        const done = await hasCompletedOnboarding();
+        setShowOnboarding(!done);
+
+        // Hantera returnTo efter inloggning
+        try {
+          const returnToJson = await AsyncStorage.getItem('@lekplatsen_return_to');
+          if (returnToJson) {
+            await AsyncStorage.removeItem('@lekplatsen_return_to');
+            const { screen, params } = JSON.parse(returnToJson);
+            // Kort fördröjning för att navigationsträdet ska hinna mountas
+            setTimeout(() => {
+              navigationRef.current?.navigate(screen, params);
+            }, 100);
+          }
+        } catch (e) {
+          console.warn('Kunde inte hantera returnTo:', e);
+        }
+      } else {
+        // Visa onboarding även för gäster första gången
+        const done = await hasCompletedOnboarding();
+        setShowOnboarding(!done);
+      }
       if (initializing) setInitializing(false);
     });
 
@@ -209,14 +341,26 @@ export default function App() {
   }, [initializing]);
 
   if (initializing) {
-    return null; // eller en Splash-komponent
+    return null;
+  }
+
+  // Onboarding visas för alla nya användare (gäst eller inloggad)
+  if (showOnboarding) {
+    return (
+      <ThemeProvider>
+        <OnboardingScreen onComplete={() => setShowOnboarding(false)} />
+      </ThemeProvider>
+    );
   }
 
   return (
+    <ErrorBoundary>
     <ThemeProvider>
+      <LoginPromptProvider>
+      <OfflineBanner />
       <ThemedNavigationContainer>
         <Stack.Navigator>
-          {user ? (
+          {user && !user.isAnonymous ? (
             <>
               {/* Flik-navigatorn */}
               <Stack.Screen
@@ -236,10 +380,10 @@ export default function App() {
                 component={FriendsScreen}
                 options={{ title: 'Mina Vänner' }}
               />
-              <Stack.Screen 
+              <Stack.Screen
               name="Notifications"
               component={NotificationsScreen}
-              options={{ title: 'Notiser' }} 
+              options={{ title: 'Notiser' }}
                />
 
               <Stack.Screen
@@ -305,7 +449,7 @@ export default function App() {
               <Stack.Screen
                 name="PlaygroundDetails"
                 component={PlaygroundDetailsScreen}
-                options={{ title: 'Lekplats' }}
+                options={{ title: 'Lekplats', headerBackTitle: '' }}
               />
               <Stack.Screen
                 name="Comments"
@@ -314,30 +458,56 @@ export default function App() {
               />
             </>
           ) : (
-            // Utloggad: bara login
             <>
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-             <Stack.Screen 
-              name="Signup" 
-              component={SignupScreen} 
-              options={{ headerShown: false }} 
+              {/* Gäst-tabbar: sök + logga in */}
+              <Stack.Screen
+                name="GuestTabs"
+                component={GuestTabs}
+                options={{ headerShown: false }}
               />
-              <Stack.Screen 
-              name="ForgotPassword" 
-              component={ForgotPasswordScreen} 
-              options={{ title: 'Återställ lösenord', headerShown: true }} 
+
+              {/* Lekplatsdetaljer tillgängliga för gäster */}
+              <Stack.Screen
+                name="PlaygroundDetails"
+                component={PlaygroundDetailsScreen}
+                options={{ title: 'Lekplats', headerBackTitle: '' }}
               />
-              </>
+
+              {/* Gäst-incheckning (anonym Firebase-auth) */}
+              <Stack.Screen
+                name="CheckIn"
+                component={CheckInScreen}
+                options={{ title: 'Checka in som gäst' }}
+              />
+
+              {/* Auth-skärmar */}
+              <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Signup"
+                component={SignupScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="ForgotPassword"
+                component={ForgotPasswordScreen}
+                options={{ title: 'Återställ lösenord', headerShown: true }}
+              />
+            </>
           )}
         </Stack.Navigator>
       </ThemedNavigationContainer>
+      <LoginRequiredModal />
+      </LoginPromptProvider>
     </ThemeProvider>
+    </ErrorBoundary>
   );
 }
+
+export default Sentry.wrap(App);
 
 const styles = StyleSheet.create({
   shadow: {

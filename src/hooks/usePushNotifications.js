@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-
-const EAS_PROJECT_ID = 'ea779f71-c184-4011-b809-4514ebcda658';
 
 // Konfigurerar hur notifieringar visas när appen är i förgrunden
 Notifications.setNotificationHandler({
@@ -26,7 +25,12 @@ export async function registerPushToken(uid) {
       return;
     }
 
-    const token = (await Notifications.getExpoPushTokenAsync({ projectId: EAS_PROJECT_ID })).data;
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    if (!projectId) {
+      console.warn('EAS Project ID saknas i app-konfigurationen');
+      return;
+    }
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
 
     await setDoc(doc(db, 'users', uid), { expoPushToken: token }, { merge: true });
 

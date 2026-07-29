@@ -35,6 +35,7 @@ import { enrichFeed, getPlaygroundImage } from '../../src/services/feedService';
 import { useTheme, mapStyle } from '../../src/theme';
 import { Card, Chip } from '../../src/ui';
 import FullscreenImageModal from '../../src/components/FullscreenImageModal';
+import { useAuthGate } from '../../src/hooks/useAuthGate';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -182,6 +183,7 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
 
 export default function PlaygroundDetailsScreen({ route, navigation }) {
   const { theme } = useTheme();
+  const requireAuth = useAuthGate();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   const { playground: initialPg, id: playgroundId } = route.params || {};
@@ -242,7 +244,9 @@ export default function PlaygroundDetailsScreen({ route, navigation }) {
 
   // 2. Funktion för att spara till Firebase
   const handleToggleFavorite = async () => {
-    if (!userId || !playground?.id) return;
+    if (!playground?.id) return;
+    if (!requireAuth('PlaygroundDetails', { id: playground.id })) return;
+    if (!userId) return;
     const userRef = doc(db, 'users', userId);
     const newStatus = !isFavorite;
     setIsFavorite(newStatus); // Snabb UI-uppdatering
@@ -260,20 +264,35 @@ export default function PlaygroundDetailsScreen({ route, navigation }) {
   const galleryImages = useMemo(() => {
     if (!playground) return [];
     const images = [];
+
+    // Samla alla check-in-URLer så vi inte råkar märka dem som lekplatsbilder
+    const checkinUrls = new Set(
+      checkIns.flatMap(ci => {
+        const img = ci.incheckning?.bildUrl || ci.incheckning?.bild;
+        return img ? [img] : [];
+      })
+    );
+
     // Lägg till lekplatsens egna bilder (bilder-array tar prioritet)
     if (playground.bilder?.length > 0) {
-      playground.bilder.forEach(url => { if (url && !images.includes(url)) images.push(url); });
+      playground.bilder.forEach(url => {
+        if (url && !checkinUrls.has(url) && !images.some(i => i.uri === url))
+          images.push({ uri: url, type: 'playground' });
+      });
     } else {
       const isMissing = !playground.imageUrl || playground.imageUrl.includes('bild%20saknas');
-      if (!isMissing) images.push(playground.imageUrl);
+      if (!isMissing && !checkinUrls.has(playground.imageUrl))
+        images.push({ uri: playground.imageUrl, type: 'playground' });
     }
+
     // Lägg till bilder från incheckningar
     checkIns.forEach(ci => {
       const img = ci.incheckning?.bildUrl || ci.incheckning?.bild;
-      if (img && !images.includes(img)) images.push(img);
+      if (img && !images.some(i => i.uri === img)) images.push({ uri: img, type: 'checkin' });
     });
+
     if (images.length === 0) {
-      images.push('https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f');
+      images.push({ uri: 'https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f', type: 'playground' });
     }
     return images;
   }, [playground, checkIns]);
@@ -490,19 +509,30 @@ useEffect(() => {
       renderItem={({ item }) => (
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={() => setFullscreenImage(item)}
+          onPress={() => setFullscreenImage(item.uri)}
           style={{ width: SCREEN_WIDTH, alignItems: 'center' }}
         >
-          <Image
-            source={{ uri: item }}
-            style={{
-              width: '92%',
-              height: 220,
-              borderRadius: theme.radius.xl,
-              backgroundColor: theme.colors.bgSoft,
-            }}
-            resizeMode="cover"
-          />
+          <View style={{ width: '92%', height: 220 }}>
+            <Image
+              source={{ uri: item.uri }}
+              style={{
+                width: '100%',
+                height: 220,
+                borderRadius: theme.radius.xl,
+                backgroundColor: theme.colors.bgSoft,
+              }}
+              resizeMode="cover"
+            />
+            {item.type === 'checkin' && (
+              <View style={{
+                position: 'absolute', bottom: 10, left: 10,
+                backgroundColor: 'rgba(0,0,0,0.55)',
+                borderRadius: 999, padding: 6,
+              }}>
+                <Ionicons name="person-circle" size={18} color={theme.colors.buttonText} />
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
       )}
     />
@@ -655,10 +685,13 @@ useEffect(() => {
           </Card>
         )}
 
-        {/* Föreslå ändring – efter kartan */}
-        {userId && !isAdmin && playground?.status !== 'review' && (
+        {/* Föreslå ändring – efter kartan (dölj för utloggade och gäster) */}
+        {!isAdmin && playground?.status !== 'review' && auth.currentUser && !auth.currentUser.isAnonymous && (
           <TouchableOpacity
-            onPress={() => setShowSuggestModal(true)}
+            onPress={() => {
+              if (!requireAuth('PlaygroundDetails', { id: playground.id })) return;
+              setShowSuggestModal(true);
+            }}
             style={{ marginHorizontal: theme.space.lg, marginTop: theme.space.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 }}
           >
             <Ionicons name="flag-outline" size={16} color={theme.colors.textMuted} />
@@ -772,9 +805,9 @@ useEffect(() => {
                 style={[styles.submitBtn, { backgroundColor: theme.colors.primary, opacity: (sendingSuggestion || !suggestionCategory) ? 0.4 : 1 }]}
               >
                 {sendingSuggestion ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color={theme.colors.buttonText} />
                 ) : (
-                  <Text style={{ color: '#fff', fontWeight: '800' }}>Skicka förslag</Text>
+                  <Text style={{ color: theme.colors.buttonText, fontWeight: '800' }}>Skicka förslag</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -846,7 +879,13 @@ useEffect(() => {
 
       <View style={[styles.fixedFooter, { backgroundColor: theme.colors.bg }]}>
         <TouchableOpacity
-          onPress={() => navigation.navigate('CheckIn', { playgroundId: playground.id })}
+          onPress={() => {
+            const isAnon = !auth.currentUser || auth.currentUser.isAnonymous;
+            navigation.navigate('CheckIn', {
+              playgroundId: playground.id,
+              ...(isAnon ? { guest: true } : {}),
+            });
+          }}
           style={[styles.primaryCta, { backgroundColor: playground?.status === 'review' ? theme.colors.textMuted : theme.colors.primary }]}
           disabled={playground?.status === 'review'}
         >

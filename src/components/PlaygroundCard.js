@@ -1,10 +1,11 @@
-import React, { memo, useMemo, useState, useEffect } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ImageBackground, StyleSheet, Modal, Image, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { parsePosition, calculateDistance, formatDistance } from '../../utils/geo';
 import { trackSponsorEvent } from '../../utils/sponsorAnalytics';
+import { isGoldSponsor } from '../../utils/sponsorImpressions';
 
 const FALLBACK_IMG =
   'https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f';
@@ -41,15 +42,14 @@ const PlaygroundCard = memo(({ item, userLocation, style }) => {
     (parent || navigation).navigate('PlaygroundDetails', { playground: payload, id: payload.id });
   };
 
-  const isGoldSponsor = item.sponsorship?.active && item.sponsorship?.level === 'guld';
+  // Samma bedömning som visningsräkningen använder, så badge och statistik
+  // aldrig kan glida isär.
+  const visarSponsorBadge = isGoldSponsor(item);
   const sponsor = item.sponsorData;
 
-  // Spåra badge-visning
-  useEffect(() => {
-    if (isGoldSponsor && sponsor?.id) {
-      trackSponsorEvent(sponsor.id, 'badgeImpressions');
-    }
-  }, [isGoldSponsor, sponsor?.id]);
+  // Badge-visningar loggas inte här. Ett kort monteras långt innan det syns
+  // (FlatList renderar i förväg) och monteras om vid scroll, så räkningen
+  // ligger i listan i stället — se src/hooks/useSponsorImpressions.js.
 
   return (
     <>
@@ -58,7 +58,7 @@ const PlaygroundCard = memo(({ item, userLocation, style }) => {
           <View style={styles.overlay} />
 
           {/* Sponsor-badge uppe till vänster */}
-          {isGoldSponsor && (
+          {visarSponsorBadge && (
             <TouchableOpacity
               style={styles.sponsorBadge}
               onPress={(e) => { e.stopPropagation?.(); setSponsorModalVisible(true); trackSponsorEvent(sponsor?.id, 'popupOpens'); }}

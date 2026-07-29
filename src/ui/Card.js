@@ -3,11 +3,14 @@ import React from 'react';
 import { View } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
-export const Card = ({ children, style }) => {
+export const Card = ({ children, style, accessibilityLabel }) => {
   const { theme, mode } = useTheme(); // Hämta 'mode' (light/dark) om det finns
   
   return (
     <View
+      accessible={!!accessibilityLabel}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole={accessibilityLabel ? 'summary' : undefined}
       style={[
         {
           backgroundColor: theme.colors.cardBg,

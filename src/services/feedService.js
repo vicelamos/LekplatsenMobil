@@ -1,5 +1,57 @@
-import { doc, getDoc, getDocs, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, query, where, orderBy, limit, startAfter } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { chunkIds, mergeChunkPages } from '../../utils/feedPaging';
+
+/**
+ * Hämtar en sida av vänflödet.
+ *
+ * Vänlistan delas upp i chunkar eftersom Firestores `in` tar max 30 värden.
+ * Varje chunk har en egen markör: hämtar man en hel sida per chunk och sedan
+ * visar de nyaste posterna av alla, hamnar de bortsorterade posterna bakom en
+ * gemensam markör och hämtas aldrig igen.
+ *
+ * @param {object} args
+ * @param {string[]} args.userIds - användaren själv + vänner
+ * @param {number} [args.pageSize]
+ * @param {Array|null} [args.cursors] - markörer från föregående anrop
+ * @returns {Promise<{items: object[], cursors: Array, hasMore: boolean}>}
+ */
+export async function fetchFriendsFeedPage({ userIds, pageSize = 10, cursors = null }) {
+  const chunkar = chunkIds(userIds);
+  if (chunkar.length === 0) return { items: [], cursors: [], hasMore: false };
+
+  const snaps = await Promise.all(
+    chunkar.map((ids, i) => {
+      const bas = [
+        collection(db, 'incheckningar'),
+        where('userId', 'in', ids),
+        orderBy('timestamp', 'desc'),
+      ];
+      const markor = cursors?.[i];
+      const q = markor
+        ? query(...bas, startAfter(markor), limit(pageSize))
+        : query(...bas, limit(pageSize));
+      return getDocs(q);
+    })
+  );
+
+  // Dokumentögonblicksbilder används som markörer – de skiljer på poster med
+  // exakt samma tidsstämpel, vilket ett rått tidsvärde inte gör.
+  const snapById = new Map();
+  const chunkPages = snaps.map((snap) => {
+    snap.docs.forEach((d) => snapById.set(d.id, d));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  });
+
+  const { page, cursors: nyaMarkorer, hasMore } = mergeChunkPages(chunkPages, pageSize);
+
+  return {
+    items: page,
+    // null betyder att ingen post från chunken kom med – behåll föregående markör
+    cursors: nyaMarkorer.map((item, i) => (item ? snapById.get(item.id) : cursors?.[i] ?? null)),
+    hasMore,
+  };
+}
 
 /**
  * Berikar incheckningsdata med användarprofiler och lekplatsinfo.
@@ -17,12 +69,16 @@ export const enrichFeed = async (checkInsData) => {
   });
 
   // 2. Hämta alla användarprofiler parallellt
+  // För gäster (utan auth) misslyckas dessa läsningar med permission-denied —
+  // vi tolererar detta och faller tillbaka till incheckningens egna fält.
   const userSnaps = await Promise.all(
-    [...userIdsToFetch].map((id) => getDoc(doc(db, 'users', id)))
+    [...userIdsToFetch].map((id) =>
+      getDoc(doc(db, 'users', id)).catch(() => null)
+    )
   );
   const usersMap = {};
   userSnaps.forEach((snap) => {
-    if (snap.exists()) usersMap[snap.id] = snap.data();
+    if (snap && snap.exists()) usersMap[snap.id] = snap.data();
   });
 
   // 3. Samla alla unika lekplats-ID:n och hämta dem

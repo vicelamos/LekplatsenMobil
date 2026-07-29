@@ -26,6 +26,8 @@ module.exports = ({ config }) => {
     prodFirebaseStorageBucket: process.env.PROD_FIREBASE_STORAGE_BUCKET,
     prodFirebaseMessagingSenderId: process.env.PROD_FIREBASE_MESSAGING_SENDER_ID,
     prodFirebaseAppId: process.env.PROD_FIREBASE_APP_ID,
+    // Sentry
+    sentryDsn: process.env.SENTRY_DSN,
   };
 
   // Use EAS file environment variable for google-services.json if available
@@ -36,6 +38,13 @@ module.exports = ({ config }) => {
   // Use EAS file environment variable for GoogleService-Info.plist if available
   if (process.env.GOOGLE_SERVICE_INFO_PLIST) {
     finalConfig.ios.googleServicesFile = process.env.GOOGLE_SERVICE_INFO_PLIST;
+  }
+
+  // Inject Google Maps API key from environment variable
+  if (process.env.GOOGLE_MAPS_API_KEY) {
+    finalConfig.android = finalConfig.android || {};
+    finalConfig.android.config = finalConfig.android.config || {};
+    finalConfig.android.config.googleMaps = { apiKey: process.env.GOOGLE_MAPS_API_KEY };
   }
 
   return finalConfig;

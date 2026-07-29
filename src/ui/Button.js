@@ -3,7 +3,7 @@ import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
-export const Button = ({ title, onPress, loading, disabled, variant = 'primary', style }) => {
+export const Button = ({ title, onPress, loading, disabled, variant = 'primary', style, accessibilityLabel, accessibilityHint }) => {
   const { theme } = useTheme();
 
   const bg = {
@@ -35,6 +35,10 @@ export const Button = ({ title, onPress, loading, disabled, variant = 'primary',
         style,
       ]}
       activeOpacity={0.9}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel || title}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
     >
       {loading ? (
         <ActivityIndicator color={textColor} />

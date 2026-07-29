@@ -8,6 +8,9 @@ export const Chip = ({ label, selected, onPress, style }) => {
   return (
     <TouchableOpacity
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected }}
       style={[
         {
           paddingHorizontal: 14,

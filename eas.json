@@ -17,6 +17,14 @@
         "APP_ENV": "development"
       }
     },
+    "simulator": {
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "APP_ENV": "production"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "android": {

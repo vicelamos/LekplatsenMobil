@@ -20,10 +20,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { File as ExpoFile } from 'expo-file-system';
 import { auth, db, storage } from '../../firebase';
 import { compressImage, getReadableFileSize } from '../../utils/imageCompression';
+import { checkinImagePath } from '../../utils/anonymization';
+import { uploadBase64 } from '../../src/services/storageService';
 import {
   doc,
   getDoc,
   updateDoc,
+  setDoc,
+  increment,
   serverTimestamp,
 } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
@@ -185,30 +189,6 @@ export default function EditCheckInScreen({ route, navigation }) {
     return <View style={{ flexDirection: 'row', gap: 4 }}>{items}</View>;
   }, [rating, theme.colors.textMuted]);
 
-  const uploadBase64 = async (storageRef, base64Data) => {
-    const bucket = storageRef.bucket;
-    const encodedPath = encodeURIComponent(storageRef.fullPath);
-    const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}`;
-    const token = await auth.currentUser?.getIdToken();
-    const binaryStr = atob(base64Data);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) {
-      bytes[i] = binaryStr.charCodeAt(i);
-    }
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error(`Upload failed: ${xhr.status}`));
-      };
-      xhr.onerror = () => reject(new Error('Upload XHR error'));
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'image/jpeg');
-      xhr.setRequestHeader('X-Goog-Upload-Protocol', 'raw');
-      if (token) xhr.setRequestHeader('Authorization', `Firebase ${token}`);
-      xhr.send(bytes);
-    });
-  };
 
   const addTaggedFriend = (friend) => {
     if (!taggedFriends.some(tf => tf.id === friend.id)) {
@@ -280,7 +260,7 @@ export default function EditCheckInScreen({ route, navigation }) {
       setUploading(true);
       const file = new ExpoFile(imageUri);
       const base64Data = await file.base64();
-      const path = `images/checkins/${userId}/${checkInId}/${Date.now()}.jpg`;
+      const path = checkinImagePath(checkInId, `${Date.now()}.jpg`);
       const storageRef = ref(storage, path);
       await uploadBase64(storageRef, base64Data);
       return await getDownloadURL(storageRef);
@@ -319,6 +299,21 @@ export default function EditCheckInScreen({ route, navigation }) {
         redigerad: true,
         redigeradAt: serverTimestamp(),
       });
+
+      // Spara nya klarade utmaningar och uppdatera räknaren
+      if (klaradeUtmaningar.length > 0) {
+        const allCompleted = [...new Set([...previouslyCompleted, ...klaradeUtmaningar])];
+        await setDoc(doc(db, 'users', userId, 'klaradeUtmaningar', playgroundId), {
+          utmaningar: allCompleted,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+        const newlyCompleted = klaradeUtmaningar.filter(u => !previouslyCompleted.includes(u));
+        if (newlyCompleted.length > 0) {
+          await updateDoc(doc(db, 'users', userId), {
+            totalCompletedChallenges: increment(newlyCompleted.length),
+          });
+        }
+      }
 
       Alert.alert('Sparat!', 'Din incheckning är uppdaterad.', [
         { text: 'OK', onPress: () => navigation.goBack() },

@@ -1,13 +1,18 @@
 // utils/imageCompression.js
-// Ingen native modul behövs – komprimering hanteras av expo-image-picker via quality-parametern.
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 /**
- * Returnerar URI:n som den är.
- * Komprimering sker redan i expo-image-picker när quality: 0.75 anges.
- * Funktionen finns kvar så att all anropande kod fungerar utan ändringar.
+ * Komprimerar bilden och strippar EXIF-data genom att omkoda via expo-image-manipulator.
+ * @param {string} uri - Bild-URI att bearbeta
+ * @param {object} options - { quality: 0-1 }
+ * @returns {Promise<string>} Ny URI utan EXIF-data
  */
-export async function compressImage(uri, _options = {}) {
-  return uri;
+export async function compressImage(uri, options = {}) {
+  const result = await manipulateAsync(uri, [], {
+    compress: options.quality || 0.75,
+    format: SaveFormat.JPEG,
+  });
+  return result.uri;
 }
 
 /**

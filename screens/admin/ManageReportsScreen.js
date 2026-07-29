@@ -86,6 +86,11 @@ export default function ManageReportsScreen() {
         <Text style={[styles.reason, { color: theme.colors.text }]}>
           <Text style={{ fontWeight: '700' }}>Anledning: </Text>{item.reason}
         </Text>
+        {!!item.comment && (
+          <Text style={[styles.meta, { color: theme.colors.text, marginTop: 4 }]}>
+            <Text style={{ fontWeight: '700' }}>Kommentar: </Text>{item.comment}
+          </Text>
+        )}
         <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
           Rapporterat objekt-ID: {item.itemId}
         </Text>
@@ -101,14 +106,14 @@ export default function ManageReportsScreen() {
               style={[styles.actionBtn, { backgroundColor: '#10b981' }]}
               onPress={() => updateStatus(item.id, 'reviewed')}
             >
-              <Ionicons name="checkmark" size={14} color="#fff" />
+              <Ionicons name="checkmark" size={14} color={theme.colors.buttonText} />
               <Text style={styles.actionBtnText}>Markera granskad</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: '#6b7280' }]}
               onPress={() => updateStatus(item.id, 'dismissed')}
             >
-              <Ionicons name="close" size={14} color="#fff" />
+              <Ionicons name="close" size={14} color={theme.colors.buttonText} />
               <Text style={styles.actionBtnText}>Avvisa</Text>
             </TouchableOpacity>
           </View>
@@ -127,7 +132,7 @@ export default function ManageReportsScreen() {
             style={[styles.filterBtn, filter === f && { backgroundColor: theme.colors.primary }]}
             onPress={() => setFilter(f)}
           >
-            <Text style={[styles.filterText, { color: filter === f ? '#fff' : theme.colors.textMuted }]}>
+            <Text style={[styles.filterText, { color: filter === f ? theme.colors.buttonText : theme.colors.textMuted }]}>
               {STATUS_LABELS[f] ?? f}
             </Text>
           </TouchableOpacity>
@@ -169,7 +174,7 @@ const getStyles = (theme) =>
     meta: { fontSize: 12, marginBottom: 2 },
     actions: { flexDirection: 'row', gap: 8, marginTop: 12 },
     actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-    actionBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+    actionBtnText: { color: theme.colors.buttonText, fontWeight: '700', fontSize: 13 },
     empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
     emptyText: { fontSize: 15 },
   });

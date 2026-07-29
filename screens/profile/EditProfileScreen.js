@@ -22,6 +22,8 @@ import { File as ExpoFile } from 'expo-file-system';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme';
 import { Card } from '../../src/ui';
+import { compressImage } from '../../utils/imageCompression';
+import { uploadBase64 } from '../../src/services/storageService';
 
 function EditProfileScreen() {
   const { theme } = useTheme();
@@ -57,31 +59,6 @@ function EditProfileScreen() {
   }, [userId]);
 
   // --- Bilduppladdning ---
-
-  const uploadBase64 = async (storageRef, base64Data) => {
-    const bucket = 'lekplatsen-907fb.firebasestorage.app';
-    const encodedPath = encodeURIComponent(storageRef.fullPath);
-    const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}`;
-    const token = await auth.currentUser?.getIdToken();
-    const binaryStr = atob(base64Data);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) {
-      bytes[i] = binaryStr.charCodeAt(i);
-    }
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error(`Upload failed: ${xhr.status}`));
-      };
-      xhr.onerror = () => reject(new Error('Upload XHR error'));
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'image/jpeg');
-      xhr.setRequestHeader('X-Goog-Upload-Protocol', 'raw');
-      if (token) xhr.setRequestHeader('Authorization', `Firebase ${token}`);
-      xhr.send(bytes);
-    });
-  };
 
   const uploadImage = async (uri) => {
     if (!userId) return;
@@ -124,7 +101,10 @@ function EditProfileScreen() {
       aspect: [1, 1],
       quality: 0.7,
     });
-    if (!result.canceled) uploadImage(result.assets[0].uri);
+    if (!result.canceled) {
+      const compressed = await compressImage(result.assets[0].uri, { quality: 0.7 });
+      uploadImage(compressed);
+    }
   };
 
   const takePhoto = async () => {
@@ -138,7 +118,10 @@ function EditProfileScreen() {
       aspect: [1, 1],
       quality: 0.7,
     });
-    if (!result.canceled) uploadImage(result.assets[0].uri);
+    if (!result.canceled) {
+      const compressed = await compressImage(result.assets[0].uri, { quality: 0.7 });
+      uploadImage(compressed);
+    }
   };
 
   // --- Formulär ---
@@ -238,8 +221,8 @@ function EditProfileScreen() {
             />
             <View style={styles.cameraIcon}>
               {uploading
-                ? <ActivityIndicator size="small" color="#fff" />
-                : <Ionicons name="camera" size={16} color="#fff" />}
+                ? <ActivityIndicator size="small" color={theme.colors.buttonText} />
+                : <Ionicons name="camera" size={16} color={theme.colors.buttonText} />}
             </View>
           </TouchableOpacity>
           <Text style={{ color: theme.colors.textMuted, fontSize: 12, marginTop: theme.space.xs }}>

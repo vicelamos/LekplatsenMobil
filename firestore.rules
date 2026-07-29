@@ -16,6 +16,31 @@ service cloud.firestore {
     }
 
     match /incheckningar/{checkinId} {
+      // Likes-listan före och efter skrivningen. Äldre incheckningar kan sakna
+      // fältet helt, därför get() med tom lista i stället för direkt access —
+      // en saknad nyckel ger annars ett fel och nekar hela skrivningen.
+      function likesBefore() { return resource.data.get('likes', []); }
+      function likesAfter() { return request.resource.data.get('likes', []); }
+      function likesAdded() { return likesAfter().toSet().difference(likesBefore().toSet()); }
+      function likesRemoved() { return likesBefore().toSet().difference(likesAfter().toSet()); }
+
+      // Mängdjämförelse i stället för listkonkatenering: regelspråket saknar
+      // '+' för listor, och ordningen i arrayen ska inte spela någon roll.
+      // Längdkontrollen stoppar dubbletter av det egna uid:t.
+      function addsOnlyOwnLike(uid) {
+        return likesAdded().hasOnly([uid])
+               && likesAdded().size() == 1
+               && likesRemoved().size() == 0
+               && likesAfter().size() == likesBefore().size() + 1;
+      }
+
+      function removesOnlyOwnLike(uid) {
+        return likesRemoved().hasOnly([uid])
+               && likesRemoved().size() == 1
+               && likesAdded().size() == 0
+               && likesAfter().size() == likesBefore().size() - 1;
+      }
+
       allow read: if true;
       allow create: if request.auth != null
                     && request.resource.data.userId == request.auth.uid;
@@ -24,13 +49,8 @@ service cloud.firestore {
         (
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
           && (
-            // Lägger till sin egen like
-            (request.resource.data.likes == resource.data.likes + [request.auth.uid]
-             && request.resource.data.likes.size() == resource.data.likes.size() + 1)
-            ||
-            // Tar bort sin egen like
-            (resource.data.likes == request.resource.data.likes + [request.auth.uid]
-             && request.resource.data.likes.size() == resource.data.likes.size() - 1)
+            addsOnlyOwnLike(request.auth.uid)
+            || removesOnlyOwnLike(request.auth.uid)
           )
         )
         || (request.auth.uid == resource.data.userId
@@ -46,6 +66,17 @@ service cloud.firestore {
                             'redigerad', 'redigeradAt']))
       );
 
+      // Ägaren kan ta bort sin egen incheckning, admins kan moderera bort
+      // vilken som helst. Ägargrenen står först med flit: gästincheckningar
+      // görs med anonym auth och saknar users-dokument, och då blir
+      // admin-uppslaget ett fel som annars hade nekat raderingen.
+      // Följdstädning (statistik, kommentarer, bild) sköts av molnfunktionen
+      // onCheckinDeleted — reglerna kan inte kaskadradera.
+      allow delete: if request.auth != null && (
+        request.auth.uid == resource.data.userId
+        || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      );
+
       match /comments/{commentId} {
         allow read: if true;
         allow create: if request.auth != null;
@@ -55,18 +86,28 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId;
       // Användaren kan bara uppdatera sitt eget dokument med tillåtna fält.
       // Friends-arrayen hanteras via Cloud Functions (friendRequests-flödet).
-      allow update: if request.auth != null
-        && request.auth.uid == userId
-        && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly([
-              'fornamn', 'efternamn', 'smeknamn', 'smeknamnLower', 'profilbildUrl',
-              'friends', 'totalCheckinCount', 'visitedPlaygroundIds',
-              'trophyProgress', 'favorites', 'expoPushToken'
-            ]);
+      allow update: if (
+          request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'fornamn', 'efternamn', 'smeknamn', 'smeknamnLower', 'profilbildUrl',
+                'friends', 'totalCheckinCount', 'visitedPlaygroundIds',
+                'trophyProgress', 'favorites', 'expoPushToken',
+                'totalCompletedChallenges'
+              ])
+        ) || (
+          // Tillåt inloggad användare att ta bort sig själv ur någon annans friends-array
+          request.auth != null
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends'])
+          && resource.data.friends.hasAll([request.auth.uid])
+          && !request.resource.data.friends.hasAll([request.auth.uid])
+          && request.resource.data.friends.size() == resource.data.friends.size() - 1
+        );
       allow delete: if request.auth != null && request.auth.uid == userId;
 
       match /completedChallenges/{lekplatsId} {
@@ -98,16 +139,58 @@ service cloud.firestore {
     }
 
     match /sponsors/{sponsorId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow write: if request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
 
       match /stats/{date} {
-        // Alla inloggade kan logga analytikshändelser
-        allow write: if request.auth != null;
         // Bara admins kan läsa statistik
         allow read: if request.auth != null &&
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+
+        // Sponsorbadgen visas även för utloggade besökare, så loggningen måste
+        // vara öppen för gäster. Formen är däremot låst: exakt en känd räknare
+        // får stiga med exakt ett steg per skrivning, och datumfältet måste
+        // matcha dokument-id:t. Det speglar precis vad trackSponsorEvent gör.
+        // OBS: detta hindrar inte någon från att loopa +1-skrivningar. Det
+        // kräver App Check, se __tests__/rules/README.md.
+        function statsFields() {
+          return ['date', 'badgeImpressions', 'popupOpens', 'hittaHitClicks', 'websiteClicks'];
+        }
+        function counterFields() {
+          return ['badgeImpressions', 'popupOpens', 'hittaHitClicks', 'websiteClicks'];
+        }
+        function changedFields() {
+          return request.resource.data.diff(resource.data).affectedKeys();
+        }
+        // En befintlig räknare som stiger med exakt ett steg. För oförändrade
+        // fält blir jämförelsen x == x + 1, alltså falsk.
+        function stepsExactlyOne(field) {
+          return request.resource.data.get(field, 0) == resource.data.get(field, 0) + 1;
+        }
+        // Vid create: fältet saknas (standardvärdet passerar) eller är 1.
+        function startsAtOne(field) {
+          return request.resource.data.get(field, 1) == 1;
+        }
+
+        allow create: if request.resource.data.keys().hasOnly(statsFields())
+                      && request.resource.data.keys().hasAll(['date'])
+                      && request.resource.data.keys().size() == 2
+                      && request.resource.data.date == date
+                      && startsAtOne('badgeImpressions')
+                      && startsAtOne('popupOpens')
+                      && startsAtOne('hittaHitClicks')
+                      && startsAtOne('websiteClicks');
+
+        allow update: if request.resource.data.keys().hasOnly(statsFields())
+                      && changedFields().hasOnly(counterFields())
+                      && changedFields().size() == 1
+                      && (
+                        stepsExactlyOne('badgeImpressions')
+                        || stepsExactlyOne('popupOpens')
+                        || stepsExactlyOne('hittaHitClicks')
+                        || stepsExactlyOne('websiteClicks')
+                      );
       }
     }
 
@@ -163,6 +246,11 @@ service cloud.firestore {
 
     // Intern samling för idempotens i Cloud Functions — ingen klientaccess
     match /_processedEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Rate limiting-samling — hanteras enbart av Cloud Functions
+    match /_rateLimits/{limitId} {
       allow read, write: if false;
     }
 

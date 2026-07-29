@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tema & UI-komponenter
 import { useTheme } from '../../src/theme';
@@ -24,9 +25,11 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/aut
 // Lokalt asset
 const hero = require('../../assets/images/lekplatsen.png');
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen({ navigation, route }) {
   const { theme } = useTheme();
   const screenWidth = Dimensions.get('window').width;
+  const returnTo = route?.params?.returnTo;
+  const returnParams = route?.params?.returnParams;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,6 +64,10 @@ export default function LoginScreen({ navigation }) {
 
     setLoading(true);
     try {
+      // Spara returnTo så att App.js kan navigera vidare efter inloggning
+      if (returnTo) {
+        await AsyncStorage.setItem('@lekplatsen_return_to', JSON.stringify({ screen: returnTo, params: returnParams }));
+      }
       await signInWithEmailAndPassword(auth, email.trim(), password);
       console.log('Inloggad!');
       // navigation.replace('MainApp');
@@ -279,6 +286,18 @@ export default function LoginScreen({ navigation }) {
             >
               <Text style={{ color: theme.colors.textMuted }}>Har du inget konto?</Text>
               <Button title="Skapa konto" variant="secondary" onPress={goToSignup} />
+
+              {/* Tillbaka-knapp för gäster som kom via auth gate */}
+              {returnTo && (
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={{ marginTop: theme.space.sm, paddingVertical: 10 }}
+                >
+                  <Text style={{ color: theme.colors.link, fontWeight: '600', fontSize: 15 }}>
+                    Fortsätt utan konto
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

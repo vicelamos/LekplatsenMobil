@@ -27,6 +27,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useTheme } from '../../src/theme';
+import { invalidatePlaygroundCache } from '../../src/services/playgroundService';
 import { Card } from '../../src/ui';
 
 function ReviewDraftsScreen({ navigation }) {
@@ -66,6 +67,7 @@ function ReviewDraftsScreen({ navigation }) {
         onPress: async () => {
           try {
             await updateDoc(doc(db, 'lekplatser', item.id), { status: 'publicerad' });
+            invalidatePlaygroundCache();
             setDrafts((prev) => prev.filter((d) => d.id !== item.id));
           } catch (e) {
             Alert.alert('Fel', 'Kunde inte godkänna lekplatsen.');
@@ -102,6 +104,7 @@ function ReviewDraftsScreen({ navigation }) {
           onPress: async () => {
             try {
               await deleteDoc(doc(db, 'lekplatser', item.id));
+              invalidatePlaygroundCache();
               setDrafts((prev) => prev.filter((d) => d.id !== item.id));
             } catch (e) {
               Alert.alert('Fel', 'Kunde inte ta bort lekplatsen.');
@@ -188,7 +191,7 @@ function ReviewDraftsScreen({ navigation }) {
             onPress={() => approve(item)}
             style={[styles.actionBtn, { backgroundColor: theme.colors.primary }]}
           >
-            <Ionicons name="checkmark-circle" size={18} color="#fff" />
+            <Ionicons name="checkmark-circle" size={18} color={theme.colors.buttonText} />
             <Text style={styles.actionBtnText}>Godkänn</Text>
           </TouchableOpacity>
 
@@ -198,7 +201,7 @@ function ReviewDraftsScreen({ navigation }) {
             }
             style={[styles.actionBtn, { backgroundColor: theme.colors.info }]}
           >
-            <Ionicons name="eye" size={18} color="#fff" />
+            <Ionicons name="eye" size={18} color={theme.colors.buttonText} />
             <Text style={styles.actionBtnText}>Visa</Text>
           </TouchableOpacity>
 
@@ -206,7 +209,7 @@ function ReviewDraftsScreen({ navigation }) {
             onPress={() => reject(item)}
             style={[styles.actionBtn, { backgroundColor: theme.colors.danger }]}
           >
-            <Ionicons name="close-circle" size={18} color="#fff" />
+            <Ionicons name="close-circle" size={18} color={theme.colors.buttonText} />
             <Text style={styles.actionBtnText}>Neka</Text>
           </TouchableOpacity>
         </View>
@@ -253,7 +256,7 @@ function ReviewDraftsScreen({ navigation }) {
           }
           style={[styles.actionBtn, { backgroundColor: theme.colors.textMuted }]}
         >
-          <Ionicons name="create" size={16} color="#fff" />
+          <Ionicons name="create" size={16} color={theme.colors.buttonText} />
           <Text style={styles.actionBtnText}>Redigera</Text>
         </TouchableOpacity>
 
@@ -263,7 +266,7 @@ function ReviewDraftsScreen({ navigation }) {
           }
           style={[styles.actionBtn, { backgroundColor: theme.colors.info }]}
         >
-          <Ionicons name="eye" size={16} color="#fff" />
+          <Ionicons name="eye" size={16} color={theme.colors.buttonText} />
           <Text style={styles.actionBtnText}>Visa</Text>
         </TouchableOpacity>
 
@@ -271,7 +274,7 @@ function ReviewDraftsScreen({ navigation }) {
           onPress={() => markSuggestion(item, 'done')}
           style={[styles.actionBtn, { backgroundColor: theme.colors.primary }]}
         >
-          <Ionicons name="checkmark-circle" size={16} color="#fff" />
+          <Ionicons name="checkmark-circle" size={16} color={theme.colors.buttonText} />
           <Text style={styles.actionBtnText}>Genomfört</Text>
         </TouchableOpacity>
 
@@ -279,7 +282,7 @@ function ReviewDraftsScreen({ navigation }) {
           onPress={() => markSuggestion(item, 'dismissed')}
           style={[styles.actionBtn, { backgroundColor: theme.colors.danger }]}
         >
-          <Ionicons name="close-circle" size={16} color="#fff" />
+          <Ionicons name="close-circle" size={16} color={theme.colors.buttonText} />
           <Text style={styles.actionBtnText}>Avfärda</Text>
         </TouchableOpacity>
       </View>
@@ -415,7 +418,7 @@ const getStyles = (theme) =>
       justifyContent: 'center',
       paddingHorizontal: 6,
     },
-    badgeText: { color: '#fff', fontWeight: '800', fontSize: 12 },
+    badgeText: { color: theme.colors.buttonText, fontWeight: '800', fontSize: 12 },
     card: {
       padding: 0,
       overflow: 'hidden',
@@ -466,7 +469,7 @@ const getStyles = (theme) =>
       borderRadius: theme.radius.md,
     },
     actionBtnText: {
-      color: '#fff',
+      color: theme.colors.buttonText,
       fontWeight: '700',
       fontSize: 13,
     },

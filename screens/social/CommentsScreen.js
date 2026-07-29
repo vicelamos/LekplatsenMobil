@@ -51,6 +51,7 @@ const CommentCard = React.memo(({ item, checkInId, currentUserId }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [reportVisible, setReportVisible] = useState(false);
   const [selectedReason, setSelectedReason] = useState(null);
+  const [reportComment, setReportComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!user) return null;
@@ -86,11 +87,13 @@ const CommentCard = React.memo(({ item, checkInId, currentUserId }) => {
         reportedUserId: user.uid,
         reportedByUserId: currentUserId,
         reason: selectedReason,
+        comment: reportComment.trim(),
         status: 'pending',
         createdAt: serverTimestamp(),
       });
       setReportVisible(false);
       setSelectedReason(null);
+      setReportComment('');
       Alert.alert('Tack', 'Din rapport har skickats och granskas av en administratör.');
     } catch {
       Alert.alert('Fel', 'Kunde inte skicka rapporten. Försök igen.');
@@ -127,7 +130,7 @@ const CommentCard = React.memo(({ item, checkInId, currentUserId }) => {
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setMenuVisible(false)}>
           <TouchableOpacity activeOpacity={1} style={[styles.menuSheet, { backgroundColor: theme.colors.cardBg }]}>
             {!isOwn && (
-              <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); setSelectedReason(null); setReportVisible(true); }}>
+              <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); setSelectedReason(null); setReportComment(''); setReportVisible(true); }}>
                 <Ionicons name="flag-outline" size={20} color={theme.colors.danger} />
                 <Text style={[styles.menuItemText, { color: theme.colors.danger }]}>Rapportera kommentar</Text>
               </TouchableOpacity>
@@ -161,12 +164,21 @@ const CommentCard = React.memo(({ item, checkInId, currentUserId }) => {
                 <Text style={{ color: theme.colors.text, fontSize: 15 }}>{reason}</Text>
               </TouchableOpacity>
             ))}
+            <TextInput
+              style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: 8, padding: 10, marginTop: 10, color: theme.colors.text, minHeight: 70, textAlignVertical: 'top', fontSize: 14 }}
+              placeholder="Ytterligare kommentar (valfritt)"
+              placeholderTextColor={theme.colors.textMuted}
+              value={reportComment}
+              onChangeText={setReportComment}
+              multiline
+              maxLength={500}
+            />
             <TouchableOpacity
               style={[styles.submitBtn, { backgroundColor: theme.colors.primary }, (!selectedReason || isSubmitting) && { opacity: 0.4 }]}
               onPress={handleSubmitReport}
               disabled={!selectedReason || isSubmitting}
             >
-              <Text style={{ color: '#fff', fontWeight: '700' }}>{isSubmitting ? 'Skickar...' : 'Skicka rapport'}</Text>
+              <Text style={{ color: theme.colors.buttonText, fontWeight: '700' }}>{isSubmitting ? 'Skickar...' : 'Skicka rapport'}</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
@@ -304,7 +316,7 @@ export default function CommentsScreen({ route }) {
           keyExtractor={item => item.id}
           renderItem={({ item }) => <CommentCard item={item} checkInId={checkInId} currentUserId={userId} />}
           ListHeaderComponent={() => (
-            <Card style={styles.headerCard}>
+            <Card style={[styles.headerCard, { borderLeftColor: theme.colors.danger }]}>
               <Text style={{ fontStyle: 'italic', color: theme.colors.text }}>
                 "{checkInComment || 'Besöksrapport'}"
               </Text>
@@ -370,9 +382,9 @@ export default function CommentsScreen({ route }) {
               disabled={!newComment.trim() || isSubmitting}
             >
               {isSubmitting ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={theme.colors.buttonText} />
               ) : (
-                <Ionicons name="arrow-up" size={24} color="#fff" />
+                <Ionicons name="arrow-up" size={24} color={theme.colors.buttonText} />
               )}
             </TouchableOpacity>
           </View>

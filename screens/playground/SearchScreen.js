@@ -27,6 +27,9 @@ import { Card as UICard, Chip, Input } from '../../src/ui';
 import { parsePosition, calculateDistance, formatDistance } from '../../utils/geo';
 import { enrichPlaygroundsWithImages } from '../../src/services/feedService';
 import PlaygroundCard from '../../src/components/PlaygroundCard';
+import { useSponsorImpressions } from '../../src/hooks/useSponsorImpressions';
+import { getPlaygroundsWithSponsors } from '../../src/services/playgroundService';
+import { useAuthGate } from '../../src/hooks/useAuthGate';
 import { useRef } from 'react';
 
 const FALLBACK_IMG = 'https://firebasestorage.googleapis.com/v0/b/lekplatsen-907fb.firebasestorage.app/o/bild%20saknas.png?alt=media&token=3acbfa69-dea8-456b-bbe2-dd95034f773f';
@@ -115,12 +118,14 @@ const SearchHeader = memo(({
       </View>
 
       <View style={styles.actionRow}>
+        {auth.currentUser && (
         <TouchableOpacity
           onPress={() => setShowFavoritesOnly(!showFavoritesOnly)}
           style={[styles.filterBtn, { backgroundColor: showFavoritesOnly ? theme.colors.accent : theme.colors.bgSoft }]}
         >
           <Ionicons name={showFavoritesOnly ? "star" : "star-outline"} size={20} color={showFavoritesOnly ? theme.colors.primaryTextOn : theme.colors.textMuted} />
         </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           onPress={onOpenFilterSort}
@@ -162,13 +167,19 @@ const SearchHeader = memo(({
 /* ----------------------------- Footer ----------------------------- */
 const AddPlaygroundFooter = memo(({ navigation }) => {
   const { theme } = useTheme();
+  const requireAuth = useAuthGate();
+  // Dölj för utloggade och anonyma (gäst) användare
+  if (!auth.currentUser || auth.currentUser.isAnonymous) return null;
   return (
     <View style={{ alignItems: 'center', paddingVertical: 30, paddingHorizontal: 20 }}>
       <Text style={{ fontSize: 16, color: theme.colors.textMuted, textAlign: 'center', marginBottom: 16, fontWeight: '500' }}>
         Saknas en lekplats? Lägg till den här!
       </Text>
       <TouchableOpacity
-        onPress={() => navigation.navigate('AddPlayground')}
+        onPress={() => {
+          if (!requireAuth('AddPlayground')) return;
+          navigation.navigate('AddPlayground');
+        }}
         style={[{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 25, gap: 8, ...theme.shadow.card }, { backgroundColor: theme.colors.primary }]}
       >
         <Ionicons name="add-circle-outline" size={24} color={theme.colors.primaryTextOn} />
@@ -414,7 +425,9 @@ const FilterSortModal = memo(({
 /* ------------------------- Huvudkomponent ------------------------- */
 function SearchScreen() {
   const navigation = useNavigation();
+  const requireAuth = useAuthGate();
   const { theme } = useTheme();
+  const { onViewableItemsChanged, viewabilityConfig } = useSponsorImpressions();
   const [loading, setLoading] = useState(true);
   const [allPlaygrounds, setAllPlaygrounds] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
@@ -465,19 +478,7 @@ function SearchScreen() {
 
   const fetchData = async () => {
     try {
-      const [snap, sponsorSnap] = await Promise.all([
-        getDocs(query(collection(db, 'lekplatser'))),
-        getDocs(collection(db, 'sponsors')),
-      ]);
-      const sponsorMap = {};
-      sponsorSnap.docs.forEach(d => { sponsorMap[d.id] = { id: d.id, ...d.data() }; });
-      const raw = snap.docs.map(d => {
-        const data = d.data();
-        const sponsorData = data.sponsorship?.active && data.sponsorship?.sponsorId
-          ? sponsorMap[data.sponsorship.sponsorId] || null
-          : null;
-        return { id: d.id, ...data, sponsorName: sponsorData?.name || null, sponsorData };
-      });
+      const raw = await getPlaygroundsWithSponsors();
       const enriched = await enrichPlaygroundsWithImages(raw);
       setAllPlaygrounds(enriched);
 
@@ -596,6 +597,8 @@ function SearchScreen() {
           keyExtractor={item => item.id}
           contentContainerStyle={{ paddingBottom: theme.space.xl * 2, paddingHorizontal: 6 }}
           ListFooterComponent={<AddPlaygroundFooter navigation={navigation} />}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
         />
       ) : (
         <View style={{ flex: 1, padding: 16 }}>
@@ -625,13 +628,13 @@ function SearchScreen() {
                   <View style={{ alignItems: 'center' }}>
                     {isGoldSponsor && (
                       <View style={{ backgroundColor: 'rgba(140,100,0,0.9)', borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1, marginBottom: 2 }}>
-                        <Text style={{ color: '#FFD700', fontSize: 9, fontWeight: '800' }}>★ {pg.sponsorName || 'Sponsor'}</Text>
+                        <Text style={{ color: theme.colors.sponsor, fontSize: 9, fontWeight: '800' }}>★ {pg.sponsorName || 'Sponsor'}</Text>
                       </View>
                     )}
                     <MaterialCommunityIcons
                       name="seesaw"
                       size={isSelected ? 42 : 36}
-                      color={isGoldSponsor ? '#FFD700' : mapStyle.markerColor}
+                      color={isGoldSponsor ? theme.colors.sponsor : mapStyle.markerColor}
                     />
                   </View>
                 </Marker>
@@ -662,15 +665,15 @@ function SearchScreen() {
                     {/* Sponsor-badge uppe till vänster */}
                     {!!selectedPlayground.sponsorName && (
                       <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: 'rgba(140,100,0,0.85)', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 3, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                        <Ionicons name="star" size={11} color="#FFD700" />
-                        <Text style={{ color: '#FFD700', fontSize: 11, fontWeight: '800' }}>{selectedPlayground.sponsorName}</Text>
+                        <Ionicons name="star" size={11} color={theme.colors.sponsor} />
+                        <Text style={{ color: theme.colors.sponsor, fontSize: 11, fontWeight: '800' }}>{selectedPlayground.sponsorName}</Text>
                       </View>
                     )}
 
                     {/* Betyg uppe till höger */}
                     <View style={{ position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 10, paddingHorizontal: 7, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                       <Ionicons name="star" size={12} color={theme.colors.star} />
-                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>{(selectedPlayground.snittbetyg || 0).toFixed(1)}</Text>
+                      <Text style={{ color: theme.colors.buttonText, fontSize: 12, fontWeight: 'bold' }}>{(selectedPlayground.snittbetyg || 0).toFixed(1)}</Text>
                     </View>
 
                     {/* Avstånd nere till höger */}
@@ -678,9 +681,9 @@ function SearchScreen() {
                       const pos = parsePosition(selectedPlayground.position);
                       const dist = pos ? formatDistance(calculateDistance(userLocation, pos)) : null;
                       return dist ? (
-                        <View style={{ position: 'absolute', bottom: 10, right: 10, backgroundColor: theme.colors.success || '#4caf50', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 3, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                          <Ionicons name="navigate" size={10} color="#fff" />
-                          <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{dist}</Text>
+                        <View style={{ position: 'absolute', bottom: 10, right: 10, backgroundColor: theme.colors.success, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 3, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                          <Ionicons name="navigate" size={10} color={theme.colors.buttonText} />
+                          <Text style={{ color: theme.colors.buttonText, fontSize: 11, fontWeight: 'bold' }}>{dist}</Text>
                         </View>
                       ) : null;
                     })()}
@@ -707,7 +710,11 @@ function SearchScreen() {
                 <View style={{ flexDirection: 'row' }}>
                   <TouchableOpacity
                     onPress={() => {
-                      navigation.navigate('CheckIn', { playgroundId: selectedPlayground.id });
+                      const isAnon = !auth.currentUser || auth.currentUser.isAnonymous;
+                      navigation.navigate('CheckIn', {
+                        playgroundId: selectedPlayground.id,
+                        ...(isAnon ? { guest: true } : {}),
+                      });
                       setSelectedPlayground(null);
                     }}
                     style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 6, backgroundColor: theme.colors.primarySoft }}
@@ -725,7 +732,7 @@ function SearchScreen() {
                     style={[styles.playgroundInfoButton, { flex: 1, backgroundColor: theme.colors.primary }]}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.playgroundInfoButtonText}>Visa mer</Text>
+                    <Text style={[styles.playgroundInfoButtonText, { color: theme.colors.buttonText }]}>Visa mer</Text>
                     <Ionicons name="chevron-forward" size={20} color={theme.colors.primaryTextOn} />
                   </TouchableOpacity>
                 </View>
@@ -752,7 +759,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   mapContainer: { flex: 1 },
-  playgroundInfoOverlay: { position: 'absolute', bottom: 20, left: 20, right: 20, zIndex: 1000 },
+  playgroundInfoOverlay: { position: 'absolute', bottom: 20, left: 20, right: 20, zIndex: 1000, elevation: 20 },
   playgroundInfoButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 8 },
   playgroundInfoButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 17 },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },

@@ -17,6 +17,9 @@ import { ref, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '../../firebase';
 import { useTheme } from '../../src/theme';
 import { Card } from '../../src/ui';
+import { compressImage } from '../../utils/imageCompression';
+import { uploadBase64 } from '../../src/services/storageService';
+import { invalidatePlaygroundCache } from '../../src/services/playgroundService';
 
 const LEVELS = [
   { key: 'brons',  label: '🥉 Brons',  desc: 'Pop-up vid incheckning' },
@@ -123,26 +126,6 @@ export default function ManageSponsorsScreen() {
   }, [activeTab, statsSelectedSponsorId, statsPreset, statsFromDate, statsToDate, fetchStats]);
 
   // --- Bilduppladdning ---
-  const uploadBase64 = async (storageRef, base64Data) => {
-    const bucket = 'lekplatsen-907fb.firebasestorage.app';
-    const encodedPath = encodeURIComponent(storageRef.fullPath);
-    const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}`;
-    const token = await auth.currentUser?.getIdToken();
-    const binaryStr = atob(base64Data);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`${xhr.status}`));
-      xhr.onerror = () => reject(new Error('XHR error'));
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'image/jpeg');
-      xhr.setRequestHeader('X-Goog-Upload-Protocol', 'raw');
-      if (token) xhr.setRequestHeader('Authorization', `Firebase ${token}`);
-      xhr.send(bytes);
-    });
-  };
-
   const pickLogo = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) { Alert.alert('Åtkomst nekad'); return; }
@@ -150,7 +133,10 @@ export default function ManageSponsorsScreen() {
       mediaTypes: 'images',
       allowsEditing: true, aspect: [1, 1], quality: 0.7,
     });
-    if (!result.canceled) setLogoUri(result.assets[0].uri);
+    if (!result.canceled) {
+      const compressed = await compressImage(result.assets[0].uri, { quality: 0.7 });
+      setLogoUri(compressed);
+    }
   };
 
   const uploadLogo = async (sponsorId) => {
@@ -234,6 +220,7 @@ export default function ManageSponsorsScreen() {
       await updateDoc(doc(db, 'lekplatser', selectedPg.id), {
         sponsorship: { sponsorId: selectedSponsor.id, level: selectedLevel, active: true },
       });
+      invalidatePlaygroundCache();
       setPlaygrounds(prev => prev.map(pg =>
         pg.id === selectedPg.id
           ? { ...pg, sponsorship: { sponsorId: selectedSponsor.id, level: selectedLevel, active: true } }
@@ -252,6 +239,7 @@ export default function ManageSponsorsScreen() {
       { text: 'Avbryt', style: 'cancel' },
       { text: 'Ta bort', style: 'destructive', onPress: async () => {
         await updateDoc(doc(db, 'lekplatser', pg.id), { sponsorship: null });
+        invalidatePlaygroundCache();
         setPlaygrounds(prev => prev.map(p => p.id === pg.id ? { ...p, sponsorship: null } : p));
       }},
     ]);
@@ -282,8 +270,8 @@ export default function ManageSponsorsScreen() {
       {activeTab === 'sponsors' && (
         <>
           <TouchableOpacity style={styles.addBtn} onPress={openNewSponsor}>
-            <Ionicons name="add-circle-outline" size={20} color="#fff" />
-            <Text style={{ color: '#fff', fontWeight: '700', marginLeft: 6 }}>Lägg till sponsor</Text>
+            <Ionicons name="add-circle-outline" size={20} color={theme.colors.buttonText} />
+            <Text style={{ color: theme.colors.buttonText, fontWeight: '700', marginLeft: 6 }}>Lägg till sponsor</Text>
           </TouchableOpacity>
           {loadingSponsors ? (
             <ActivityIndicator style={{ marginTop: 40 }} color={theme.colors.primary} />
@@ -357,7 +345,7 @@ export default function ManageSponsorsScreen() {
                         )}
                       </View>
                       <TouchableOpacity onPress={() => openLinkModal(item)} style={styles.linkBtn}>
-                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12 }}>
+                        <Text style={{ color: theme.colors.buttonText, fontWeight: '700', fontSize: 12 }}>
                           {sponsorName ? 'Ändra' : 'Koppla'}
                         </Text>
                       </TouchableOpacity>
@@ -408,7 +396,7 @@ export default function ManageSponsorsScreen() {
                     backgroundColor: statsSelectedSponsorId === s.id ? theme.colors.primary : theme.colors.bgSoft,
                   }}
                 >
-                  <Text style={{ color: statsSelectedSponsorId === s.id ? '#fff' : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{s.name}</Text>
+                  <Text style={{ color: statsSelectedSponsorId === s.id ? theme.colors.buttonText : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{s.name}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -425,7 +413,7 @@ export default function ManageSponsorsScreen() {
                     backgroundColor: statsPreset === p.key ? theme.colors.primary : theme.colors.bgSoft,
                   }}
                 >
-                  <Text style={{ color: statsPreset === p.key ? '#fff' : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{p.label}</Text>
+                  <Text style={{ color: statsPreset === p.key ? theme.colors.buttonText : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{p.label}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -537,7 +525,7 @@ export default function ManageSponsorsScreen() {
                 <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Avbryt</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, { backgroundColor: theme.colors.primary, flex: 2 }]} onPress={saveSponsor} disabled={saving || uploading}>
-                {(saving || uploading) ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '700' }}>Spara</Text>}
+                {(saving || uploading) ? <ActivityIndicator color={theme.colors.buttonText} /> : <Text style={{ color: theme.colors.buttonText, fontWeight: '700' }}>Spara</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -582,7 +570,7 @@ export default function ManageSponsorsScreen() {
                 <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Avbryt</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, { backgroundColor: theme.colors.primary, flex: 2 }]} onPress={saveLink} disabled={linking}>
-                {linking ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '700' }}>Spara koppling</Text>}
+                {linking ? <ActivityIndicator color={theme.colors.buttonText} /> : <Text style={{ color: theme.colors.buttonText, fontWeight: '700' }}>Spara koppling</Text>}
               </TouchableOpacity>
             </View>
           </View>
