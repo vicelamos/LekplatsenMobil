@@ -10,7 +10,6 @@ import {
   StyleSheet,
   Linking,
   Modal,
-  Alert,
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +19,7 @@ import { signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider } 
 import { doc, getDoc, collection, getDocs, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme';
+import { useDialog } from '../../src/contexts/Dialog';
 import { Card } from '../../src/ui';
 import { useFocusEffect } from '@react-navigation/native';
 import Constants from 'expo-constants';
@@ -27,6 +27,7 @@ import { useCallback } from 'react';
 
 function ProfileScreen() {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const navigation = useNavigation();
 
@@ -92,9 +93,9 @@ function ProfileScreen() {
     } catch (error) {
       setDeleteLoading(false);
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        Alert.alert('Fel lösenord', 'Kontrollera ditt lösenord och försök igen.');
+        await dialog.alert({ title: 'Fel lösenord', message: 'Kontrollera ditt lösenord och försök igen.' });
       } else {
-        Alert.alert('Fel', 'Kunde inte radera kontot. Försök igen.');
+        await dialog.alert({ title: 'Fel', message: 'Kunde inte radera kontot. Försök igen.' });
       }
     }
   };
@@ -134,7 +135,7 @@ function ProfileScreen() {
         title: 'Min data från Lekplatsen',
       });
     } catch (error) {
-      Alert.alert('Fel', 'Kunde inte exportera data. Försök igen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte exportera data. Försök igen.' });
     } finally {
       setExportLoading(false);
     }

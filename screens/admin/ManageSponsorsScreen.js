@@ -1,8 +1,16 @@
 // ManageSponsorsScreen.js
 import React, { useState, useCallback, useEffect } from 'react';
 import {
-  View, Text, FlatList, TextInput, TouchableOpacity,
-  Image, ActivityIndicator, Alert, Modal, ScrollView, StyleSheet,
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -20,6 +28,7 @@ import { Card } from '../../src/ui';
 import { compressImage } from '../../utils/imageCompression';
 import { uploadBase64 } from '../../src/services/storageService';
 import { invalidatePlaygroundCache } from '../../src/services/playgroundService';
+import { useDialog } from '../../src/contexts/Dialog';
 
 const LEVELS = [
   { key: 'brons',  label: '🥉 Brons',  desc: 'Pop-up vid incheckning' },
@@ -29,6 +38,7 @@ const LEVELS = [
 
 export default function ManageSponsorsScreen() {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const [activeTab, setActiveTab] = useState('sponsors'); // 'sponsors' | 'link'
 
   // Sponsors
@@ -128,7 +138,10 @@ export default function ManageSponsorsScreen() {
   // --- Bilduppladdning ---
   const pickLogo = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!granted) { Alert.alert('Åtkomst nekad'); return; }
+    if (!granted) {
+      await dialog.alert({ title: 'Åtkomst nekad', message: 'Appen behöver åtkomst till dina bilder.' });
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: 'images',
       allowsEditing: true, aspect: [1, 1], quality: 0.7,
@@ -169,7 +182,10 @@ export default function ManageSponsorsScreen() {
   };
 
   const saveSponsor = async () => {
-    if (!form.name.trim()) { Alert.alert('Fyll i företagsnamn'); return; }
+    if (!form.name.trim()) {
+      await dialog.alert({ title: 'Fyll i företagsnamn' });
+      return;
+    }
     setSaving(true);
     try {
       if (editingSponsor) {
@@ -188,20 +204,23 @@ export default function ManageSponsorsScreen() {
       setSponsorModal(false);
     } catch (e) {
       console.error('Fel vid sparande av sponsor:', e);
-      Alert.alert('Fel', 'Kunde inte spara sponsorn.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte spara sponsorn.' });
     } finally {
       setSaving(false);
     }
   };
 
-  const deleteSponsor = (sponsor) => {
-    Alert.alert('Ta bort sponsor', `Ta bort "${sponsor.name}"?`, [
-      { text: 'Avbryt', style: 'cancel' },
-      { text: 'Ta bort', style: 'destructive', onPress: async () => {
-        await deleteDoc(doc(db, 'sponsors', sponsor.id));
-        setSponsors(prev => prev.filter(s => s.id !== sponsor.id));
-      }},
-    ]);
+  const deleteSponsor = async (sponsor) => {
+    const bekraftat = await dialog.confirm({
+      title: 'Ta bort sponsor',
+      message: `Ta bort "${sponsor.name}"?`,
+      confirmLabel: 'Ta bort',
+      destructive: true,
+    });
+    if (!bekraftat) return;
+
+    await deleteDoc(doc(db, 'sponsors', sponsor.id));
+    setSponsors(prev => prev.filter(s => s.id !== sponsor.id));
   };
 
   // --- Länka sponsor till lekplats ---
@@ -214,7 +233,10 @@ export default function ManageSponsorsScreen() {
   };
 
   const saveLink = async () => {
-    if (!selectedSponsor) { Alert.alert('Välj en sponsor'); return; }
+    if (!selectedSponsor) {
+      await dialog.alert({ title: 'Välj en sponsor' });
+      return;
+    }
     setLinking(true);
     try {
       await updateDoc(doc(db, 'lekplatser', selectedPg.id), {
@@ -228,21 +250,24 @@ export default function ManageSponsorsScreen() {
       ));
       setLinkModal(false);
     } catch (e) {
-      Alert.alert('Fel', 'Kunde inte spara kopplingen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte spara kopplingen.' });
     } finally {
       setLinking(false);
     }
   };
 
   const removeLink = async (pg) => {
-    Alert.alert('Ta bort koppling', `Ta bort sponsorns koppling till "${pg.namn}"?`, [
-      { text: 'Avbryt', style: 'cancel' },
-      { text: 'Ta bort', style: 'destructive', onPress: async () => {
-        await updateDoc(doc(db, 'lekplatser', pg.id), { sponsorship: null });
-        invalidatePlaygroundCache();
-        setPlaygrounds(prev => prev.map(p => p.id === pg.id ? { ...p, sponsorship: null } : p));
-      }},
-    ]);
+    const bekraftat = await dialog.confirm({
+      title: 'Ta bort koppling',
+      message: `Ta bort sponsorns koppling till "${pg.namn}"?`,
+      confirmLabel: 'Ta bort',
+      destructive: true,
+    });
+    if (!bekraftat) return;
+
+    await updateDoc(doc(db, 'lekplatser', pg.id), { sponsorship: null });
+    invalidatePlaygroundCache();
+    setPlaygrounds(prev => prev.map(p => p.id === pg.id ? { ...p, sponsorship: null } : p));
   };
 
   const filteredPlaygrounds = playgrounds.filter(pg =>

@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  Alert,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,6 +38,7 @@ import { useNavigation } from '@react-navigation/native';
 
 // 🟢 Tema & UI
 import { useTheme } from '../../src/theme';
+import { useDialog } from '../../src/contexts/Dialog';
 import { Card } from '../../src/ui';
 
 /* -------------------------------------------------------------------------- */
@@ -46,6 +46,7 @@ import { Card } from '../../src/ui';
 /* -------------------------------------------------------------------------- */
 const CommentCard = React.memo(({ item, checkInId, currentUserId }) => {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const navigation = useNavigation();
   const { user, comment } = item;
   const [menuVisible, setMenuVisible] = useState(false);
@@ -59,21 +60,21 @@ const CommentCard = React.memo(({ item, checkInId, currentUserId }) => {
   const isOwn = user.uid === currentUserId;
   const date = comment.timestamp?.toDate?.().toLocaleDateString('sv-SE') || 'Just nu';
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setMenuVisible(false);
-    Alert.alert('Radera kommentar', 'Är du säker?', [
-      { text: 'Avbryt', style: 'cancel' },
-      {
-        text: 'Radera', style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteDoc(doc(db, 'incheckningar', checkInId, 'comments', item.id));
-          } catch {
-            Alert.alert('Fel', 'Kunde inte radera kommentaren.');
-          }
-        },
-      },
-    ]);
+    const bekraftat = await dialog.confirm({
+      title: 'Radera kommentar',
+      message: 'Är du säker?',
+      confirmLabel: 'Radera',
+      destructive: true,
+    });
+    if (!bekraftat) return;
+
+    try {
+      await deleteDoc(doc(db, 'incheckningar', checkInId, 'comments', item.id));
+    } catch {
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte radera kommentaren.' });
+    }
   };
 
   const handleSubmitReport = async () => {
@@ -94,9 +95,9 @@ const CommentCard = React.memo(({ item, checkInId, currentUserId }) => {
       setReportVisible(false);
       setSelectedReason(null);
       setReportComment('');
-      Alert.alert('Tack', 'Din rapport har skickats och granskas av en administratör.');
+      await dialog.alert({ title: 'Tack', message: 'Din rapport har skickats och granskas av en administratör.' });
     } catch {
-      Alert.alert('Fel', 'Kunde inte skicka rapporten. Försök igen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte skicka rapporten. Försök igen.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -192,6 +193,7 @@ const CommentCard = React.memo(({ item, checkInId, currentUserId }) => {
 /* -------------------------------------------------------------------------- */
 export default function CommentsScreen({ route }) {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const { checkInId, checkInComment } = route.params;
   
   const [loading, setLoading] = useState(true);
@@ -296,9 +298,9 @@ export default function CommentsScreen({ route }) {
         timestamp: serverTimestamp(),
       });
       setNewComment('');
-    } catch (e) { 
-      Alert.alert("Fel", "Kunde inte skicka kommentaren."); 
-    } finally { 
+    } catch (e) {
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte skicka kommentaren.' });
+    } finally {
       setIsSubmitting(false); 
     }
   };

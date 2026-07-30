@@ -8,7 +8,6 @@ import {
   ImageBackground,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Modal,
   ScrollView,
 } from 'react-native';
@@ -29,6 +28,10 @@ import { enrichPlaygroundsWithImages } from '../../src/services/feedService';
 import PlaygroundCard from '../../src/components/PlaygroundCard';
 import { useSponsorImpressions } from '../../src/hooks/useSponsorImpressions';
 import { getPlaygroundsWithSponsors } from '../../src/services/playgroundService';
+import { useProximityCandidate } from '../../src/hooks/useProximityCandidate';
+import { createQuickCheckin } from '../../src/services/checkinService';
+import ProximityPrompt from '../../src/components/ProximityPrompt';
+import { useDialog } from '../../src/contexts/Dialog';
 import { useAuthGate } from '../../src/hooks/useAuthGate';
 import { useRef } from 'react';
 
@@ -428,11 +431,14 @@ function SearchScreen() {
   const requireAuth = useAuthGate();
   const { theme } = useTheme();
   const { onViewableItemsChanged, viewabilityConfig } = useSponsorImpressions();
+  const dialog = useDialog();
   const [loading, setLoading] = useState(true);
   const [allPlaygrounds, setAllPlaygrounds] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('list');
+  // Kartan är standardvy: skärmen är appens startläge, och kartan svarar på
+  // frågan "vad finns runt mig?" bättre än en lista gör.
+  const [viewMode, setViewMode] = useState('map');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedPlayground, setSelectedPlayground] = useState(null);
@@ -446,6 +452,41 @@ function SearchScreen() {
 
   const userId = auth.currentUser?.uid;
   const mapRef = useRef(null);
+  const [smeknamn, setSmeknamn] = useState('');
+
+  // Närhetsprompten – appens huvudhandling
+  const { candidate, dismiss, markRated, selectAlternative } =
+    useProximityCandidate(allPlaygrounds);
+
+  const handleQuickRating = async (playground, rating) => {
+    if (!requireAuth('Sök')) return;
+    // Markera direkt så prompten försvinner medan skrivningen pågår
+    markRated(playground.id);
+    try {
+      await createQuickCheckin({
+        playgroundId: playground.id,
+        playgroundName: playground.namn,
+        rating,
+        userId: auth.currentUser.uid,
+        userSmeknamn: smeknamn,
+      });
+      const val = await dialog.choose({
+        title: 'Tack!',
+        message: `Du gav ${playground.namn} ${rating} av 5.`,
+        options: [{ label: 'Lägg till bild eller kommentar', value: 'detaljer' }],
+        cancelLabel: 'Klart',
+      });
+      if (val === 'detaljer') {
+        navigation.navigate('CheckIn', {
+          playgroundId: playground.id,
+          playgroundName: playground.namn,
+        });
+      }
+    } catch (e) {
+      console.error('Snabbincheckning misslyckades:', e);
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte spara betyget. Försök igen.' });
+    }
+  };
 
   const kommuner = useMemo(() => {
     return [...new Set(allPlaygrounds.map(p => p.kommun).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'sv'));
@@ -487,6 +528,7 @@ function SearchScreen() {
         if (userDoc.exists()) {
           setFavoriteIds(userDoc.data()?.favorites || []);
           setIsAdmin(!!userDoc.data()?.isAdmin);
+          setSmeknamn(userDoc.data()?.smeknamn || '');
         }
       }
     } catch (e) { console.error(e); }
@@ -572,6 +614,17 @@ function SearchScreen() {
         maxDistance={maxDistance} onRemoveMaxDistance={() => setMaxDistance(null)}
         selectedEquipment={selectedEquipment} onRemoveEquipment={(eq) => setSelectedEquipment(prev => prev.filter(e => e !== eq))}
       />
+
+      {candidate && (
+        <View style={{ paddingHorizontal: theme.space.lg, paddingBottom: theme.space.sm }}>
+          <ProximityPrompt
+            candidate={candidate}
+            onRate={handleQuickRating}
+            onDismiss={dismiss}
+            onSelectAlternative={selectAlternative}
+          />
+        </View>
+      )}
 
       <FilterSortModal
         visible={filterModalVisible}

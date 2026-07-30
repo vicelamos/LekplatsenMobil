@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  Alert,
   ActivityIndicator,
   StyleSheet,
   Switch,
@@ -29,6 +28,7 @@ import {
 import { db, auth } from '../../firebase';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../../src/theme';
+import { useDialog } from '../../src/contexts/Dialog';
 
 const TYPER = [
   { value: 'admin', label: 'Nyhet' },
@@ -46,6 +46,7 @@ const EMPTY_FORM = {
 
 export default function ManageNewsScreen() {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const styles = getStyles(theme);
 
   const [nyheter, setNyheter] = useState([]);
@@ -90,7 +91,7 @@ export default function ManageNewsScreen() {
 
   const handleSave = async () => {
     if (!form.titel.trim()) {
-      Alert.alert('Fält saknas', 'Ange en titel.');
+      await dialog.alert({ title: 'Fält saknas', message: 'Ange en titel.' });
       return;
     }
     setSaving(true);
@@ -116,7 +117,7 @@ export default function ManageNewsScreen() {
       fetchNyheter();
     } catch (e) {
       console.error('Fel vid sparande:', e);
-      Alert.alert('Fel', 'Kunde inte spara nyheten.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte spara nyheten.' });
     } finally {
       setSaving(false);
     }
@@ -127,24 +128,25 @@ export default function ManageNewsScreen() {
       await updateDoc(doc(db, 'nyheter', nyhet.id), { publicerad: !nyhet.publicerad });
       setNyheter(prev => prev.map(n => n.id === nyhet.id ? { ...n, publicerad: !n.publicerad } : n));
     } catch (e) {
-      Alert.alert('Fel', 'Kunde inte uppdatera publiceringsstatus.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte uppdatera publiceringsstatus.' });
     }
   };
 
-  const handleDelete = (nyhet) => {
-    Alert.alert('Ta bort nyhet', `Vill du ta bort "${nyhet.titel}"?`, [
-      { text: 'Avbryt', style: 'cancel' },
-      {
-        text: 'Ta bort', style: 'destructive', onPress: async () => {
-          try {
-            await deleteDoc(doc(db, 'nyheter', nyhet.id));
-            setNyheter(prev => prev.filter(n => n.id !== nyhet.id));
-          } catch (e) {
-            Alert.alert('Fel', 'Kunde inte ta bort nyheten.');
-          }
-        },
-      },
-    ]);
+  const handleDelete = async (nyhet) => {
+    const bekraftat = await dialog.confirm({
+      title: 'Ta bort nyhet',
+      message: `Vill du ta bort "${nyhet.titel}"?`,
+      confirmLabel: 'Ta bort',
+      destructive: true,
+    });
+    if (!bekraftat) return;
+
+    try {
+      await deleteDoc(doc(db, 'nyheter', nyhet.id));
+      setNyheter(prev => prev.filter(n => n.id !== nyhet.id));
+    } catch (e) {
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte ta bort nyheten.' });
+    }
   };
 
   const renderItem = ({ item }) => (

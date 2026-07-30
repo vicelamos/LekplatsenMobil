@@ -5,7 +5,6 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +20,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { useTheme } from '../../src/theme';
+import { useDialog } from '../../src/contexts/Dialog';
 import { Card } from '../../src/ui';
 
 const STATUS_FILTERS = ['Alla', 'pending', 'reviewed', 'dismissed'];
@@ -30,6 +30,7 @@ const TYPE_LABELS = { checkin: 'Incheckning', comment: 'Kommentar' };
 
 export default function ManageReportsScreen() {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const styles = getStyles(theme);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,23 +47,18 @@ export default function ManageReportsScreen() {
 
   const filteredReports = filter === 'Alla' ? reports : reports.filter((r) => r.status === filter);
 
-  const updateStatus = (id, status) => {
-    Alert.alert(
-      'Uppdatera status',
-      `Sätt rapporten till "${STATUS_LABELS[status] ?? status}"?`,
-      [
-        { text: 'Avbryt', style: 'cancel' },
-        {
-          text: 'Bekräfta',
-          onPress: async () => {
-            await updateDoc(doc(db, 'rapporter', id), {
-              status,
-              reviewedAt: serverTimestamp(),
-            });
-          },
-        },
-      ]
-    );
+  const updateStatus = async (id, status) => {
+    const bekraftat = await dialog.confirm({
+      title: 'Uppdatera status',
+      message: `Sätt rapporten till "${STATUS_LABELS[status] ?? status}"?`,
+      confirmLabel: 'Bekräfta',
+    });
+    if (!bekraftat) return;
+
+    await updateDoc(doc(db, 'rapporter', id), {
+      status,
+      reviewedAt: serverTimestamp(),
+    });
   };
 
   const renderReport = ({ item }) => {

@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -24,6 +23,7 @@ import { signInAnonymously } from 'firebase/auth';
 import { auth, db, storage } from '../../firebase';
 import { compressImage, getReadableFileSize } from '../../utils/imageCompression';
 import { checkinImagePath } from '../../utils/anonymization';
+import { useDialog } from '../../src/contexts/Dialog';
 import { uploadBase64 } from '../../src/services/storageService';
 import { trackSponsorEvent } from '../../utils/sponsorAnalytics';
 import {
@@ -47,6 +47,7 @@ export default function CheckInScreen({ route, navigation }) {
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   const { maybeRequestReview } = useAppReview();
+  const dialog = useDialog();
   const playgroundId = route.params?.playgroundId;
   const isGuest = route.params?.guest === true;
 
@@ -113,7 +114,7 @@ export default function CheckInScreen({ route, navigation }) {
       .then(() => { if (!cancelled) setAnonReady(true); })
       .catch((e) => {
         console.warn('Anonym inloggning misslyckades:', e);
-        Alert.alert('Fel', 'Kunde inte starta gäst-incheckningen. Försök igen.');
+        dialog.alert({ title: 'Fel', message: 'Kunde inte starta gäst-incheckningen. Försök igen.' });
         navigation.goBack();
       });
     return () => { cancelled = true; };
@@ -245,7 +246,7 @@ export default function CheckInScreen({ route, navigation }) {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Behörighet krävs', 'Appen behöver åtkomst till dina bilder.');
+      await dialog.alert({ title: 'Behörighet krävs', message: 'Appen behöver åtkomst till dina bilder.' });
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -266,7 +267,7 @@ export default function CheckInScreen({ route, navigation }) {
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Behörighet krävs', 'Appen behöver åtkomst till kameran.');
+      await dialog.alert({ title: 'Behörighet krävs', message: 'Appen behöver åtkomst till kameran.' });
       return;
     }
     const res = await ImagePicker.launchCameraAsync({
@@ -283,12 +284,16 @@ export default function CheckInScreen({ route, navigation }) {
     }
   };
 
-  const showImageOptions = () => {
-    Alert.alert('Lägg till bild', '', [
-      { text: 'Välj från galleri', onPress: pickImage },
-      { text: 'Ta foto', onPress: takePhoto },
-      { text: 'Avbryt', style: 'cancel' },
-    ]);
+  const showImageOptions = async () => {
+    const val = await dialog.choose({
+      title: 'Lägg till bild',
+      options: [
+        { label: 'Välj från galleri', value: 'galleri' },
+        { label: 'Ta foto', value: 'kamera' },
+      ],
+    });
+    if (val === 'galleri') pickImage();
+    if (val === 'kamera') takePhoto();
   };
 
   const uploadImageIfAny = async (checkInDocId) => {
@@ -304,7 +309,7 @@ export default function CheckInScreen({ route, navigation }) {
       return url;
     } catch (e) {
       console.error('CheckInScreen: Uppladdning misslyckades:', e);
-      Alert.alert('Fel', 'Kunde inte ladda upp bilden. Kontrollera nätverk eller filformat.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte ladda upp bilden. Kontrollera nätverk eller filformat.' });
       return '';
     } finally {
       setUploading(false);
@@ -322,19 +327,19 @@ export default function CheckInScreen({ route, navigation }) {
     try {
       const currentUid = auth.currentUser?.uid;
       if (!currentUid) {
-        Alert.alert('Inte inloggad', 'Du måste vara inloggad för att checka in.');
+        await dialog.alert({ title: 'Inte inloggad', message: 'Du måste vara inloggad för att checka in.' });
         return;
       }
       if (!playgroundId) {
-        Alert.alert('Saknar lekplats', 'Kan inte checka in utan lekplats-id.');
+        await dialog.alert({ title: 'Saknar lekplats', message: 'Kan inte checka in utan lekplats-id.' });
         return;
       }
       if (rating <= 0) {
-        Alert.alert('Betyg saknas', 'Välj ett betyg (1–5).');
+        await dialog.alert({ title: 'Betyg saknas', message: 'Välj ett betyg (1–5).' });
         return;
       }
       if (isGuest && trimmedGuestName.length < 2) {
-        Alert.alert('Namn saknas', 'Ange ett namn (minst 2 tecken).');
+        await dialog.alert({ title: 'Namn saknas', message: 'Ange ett namn (minst 2 tecken).' });
         return;
       }
       setSubmitting(true);
@@ -366,7 +371,7 @@ export default function CheckInScreen({ route, navigation }) {
         if (finalBildUrl) {
           await updateDoc(doc(db, 'incheckningar', created.id), { bildUrl: finalBildUrl });
         } else {
-          Alert.alert('Fel', 'Bilden laddades inte upp, incheckningen sparades utan bild.');
+          await dialog.alert({ title: 'Fel', message: 'Bilden laddades inte upp, incheckningen sparades utan bild.' });
         }
       }
 
@@ -392,21 +397,18 @@ export default function CheckInScreen({ route, navigation }) {
         }
       } catch (_) {}
 
-      Alert.alert('Klart!', 'Din incheckning är sparad.', [
-        { text: 'OK', onPress: async () => {
-          if (!isGuest && auth.currentUser) {
-            try {
-              const userSnap = await getDoc(doc(db, 'users', auth.currentUser.uid));
-              const count = userSnap.data()?.totalCheckinCount || 0;
-              await maybeRequestReview(count);
-            } catch (_) {}
-          }
-          navigation.goBack();
-        }},
-      ]);
+      await dialog.alert({ title: 'Klart!', message: 'Din incheckning är sparad.' });
+      if (!isGuest && auth.currentUser) {
+        try {
+          const userSnap = await getDoc(doc(db, 'users', auth.currentUser.uid));
+          const count = userSnap.data()?.totalCheckinCount || 0;
+          await maybeRequestReview(count);
+        } catch (_) {}
+      }
+      navigation.goBack();
     } catch (e) {
       console.error('Kunde inte skapa incheckning:', e);
-      Alert.alert('Fel', 'Kunde inte skapa incheckningen. Försök igen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte skapa incheckningen. Försök igen.' });
     } finally {
       setSubmitting(false);
     }

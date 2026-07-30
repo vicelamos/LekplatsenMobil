@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Image,
   Dimensions,
   ScrollView,
@@ -16,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tema & UI-komponenter
 import { useTheme } from '../../src/theme';
+import { useDialog } from '../../src/contexts/Dialog';
 import { Card, Button, Input, PatternBackground } from '../../src/ui';
 
 // Firebase
@@ -27,6 +27,7 @@ const hero = require('../../assets/images/lekplatsen.png');
 
 export default function LoginScreen({ navigation, route }) {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const screenWidth = Dimensions.get('window').width;
   const returnTo = route?.params?.returnTo;
   const returnParams = route?.params?.returnParams;
@@ -84,7 +85,7 @@ export default function LoginScreen({ navigation, route }) {
       } else if (error.code === 'auth/too-many-requests') {
         friendlyMessage = 'För många försök. Vänta en stund och prova igen.';
       }
-      Alert.alert('Inloggning misslyckades', friendlyMessage);
+      await dialog.alert({ title: 'Inloggning misslyckades', message: friendlyMessage });
     } finally {
       setLoading(false);
     }

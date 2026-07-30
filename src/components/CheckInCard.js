@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Alert, TextInput, Share } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, TextInput, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { Card, Chip } from '../ui';
@@ -8,6 +8,7 @@ import { auth, db } from '../../firebase';
 import { doc, updateDoc, arrayUnion, arrayRemove, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthGate } from '../hooks/useAuthGate';
+import { useDialog } from '../contexts/Dialog';
 
 const REPORT_REASONS = [
   'Olämpligt innehåll',
@@ -21,6 +22,7 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const requireAuth = useAuthGate();
+  const dialog = useDialog();
   const userId = auth.currentUser?.uid;
 
   // States för interaktion
@@ -60,9 +62,12 @@ export const CheckInCard = ({ item, playgroundName, onPressComments }) => {
       setReportModalVisible(false);
       setSelectedReason(null);
       setReportComment('');
-      Alert.alert('Tack', 'Din rapport har skickats och granskas av en administratör.');
+      await dialog.alert({
+        title: 'Tack',
+        message: 'Din rapport har skickats och granskas av en administratör.',
+      });
     } catch {
-      Alert.alert('Fel', 'Kunde inte skicka rapporten. Försök igen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte skicka rapporten. Försök igen.' });
     } finally {
       setIsSubmittingReport(false);
     }

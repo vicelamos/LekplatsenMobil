@@ -8,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,9 +23,11 @@ import { useTheme } from '../../src/theme';
 import { Card } from '../../src/ui';
 import { compressImage } from '../../utils/imageCompression';
 import { uploadBase64 } from '../../src/services/storageService';
+import { useDialog } from '../../src/contexts/Dialog';
 
 function EditProfileScreen() {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const navigation = useNavigation();
 
@@ -72,27 +73,32 @@ function EditProfileScreen() {
       await updateDoc(doc(db, 'users', userId), { profilbildUrl: downloadURL });
       setFormData((prev) => ({ ...prev, profilbildUrl: downloadURL }));
       setUserProfile((prev) => ({ ...prev, profilbildUrl: downloadURL }));
-      Alert.alert('Klart!', 'Din profilbild är uppdaterad.');
+      await dialog.alert({ title: 'Klart!', message: 'Din profilbild är uppdaterad.' });
     } catch (error) {
       console.error('Uppladdningsfel:', error);
-      Alert.alert('Fel', 'Kunde inte ladda upp bilden.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte ladda upp bilden.' });
     } finally {
       setUploading(false);
     }
   };
 
-  const handleImagePick = () => {
-    Alert.alert('Ändra profilbild', 'Välj källa', [
-      { text: 'Avbryt', style: 'cancel' },
-      { text: 'Galleri', onPress: pickImage },
-      { text: 'Kamera', onPress: takePhoto },
-    ]);
+  const handleImagePick = async () => {
+    const val = await dialog.choose({
+      title: 'Ändra profilbild',
+      message: 'Välj källa',
+      options: [
+        { label: 'Galleri', value: 'galleri' },
+        { label: 'Kamera', value: 'kamera' },
+      ],
+    });
+    if (val === 'galleri') pickImage();
+    if (val === 'kamera') takePhoto();
   };
 
   const pickImage = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) {
-      Alert.alert('Åtkomst nekad', 'Du måste ge appen tillåtelse att komma åt dina foton.');
+      await dialog.alert({ title: 'Åtkomst nekad', message: 'Du måste ge appen tillåtelse att komma åt dina foton.' });
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -110,7 +116,7 @@ function EditProfileScreen() {
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Åtkomst nekad', 'Du måste ge appen tillåtelse att använda kameran.');
+      await dialog.alert({ title: 'Åtkomst nekad', message: 'Du måste ge appen tillåtelse att använda kameran.' });
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -168,12 +174,11 @@ function EditProfileScreen() {
         smeknamn: newNick,
         smeknamnLower: newNick.toLowerCase(),
       });
-      Alert.alert('Sparat!', 'Din profil har uppdaterats.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      await dialog.alert({ title: 'Sparat!', message: 'Din profil har uppdaterats.' });
+      navigation.goBack();
     } catch (error) {
       console.error('Fel vid uppdatering:', error);
-      Alert.alert('Fel', 'Kunde inte spara ändringarna.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte spara ändringarna.' });
     } finally {
       setSaving(false);
     }
@@ -184,13 +189,13 @@ function EditProfileScreen() {
     if (!email) return;
     try {
       await sendPasswordResetEmail(auth, email);
-      Alert.alert(
-        'E-post skickad',
-        `En länk för att byta lösenord har skickats till ${email}. Kolla din inkorg (och skräppost).`
-      );
+      await dialog.alert({
+        title: 'E-post skickad',
+        message: `En länk för att byta lösenord har skickats till ${email}. Kolla din inkorg (och skräppost).`,
+      });
     } catch (e) {
       console.error('Fel vid lösenordsåterställning:', e);
-      Alert.alert('Fel', 'Kunde inte skicka återställningslänk.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte skicka återställningslänk.' });
     }
   };
 

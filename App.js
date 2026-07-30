@@ -26,6 +26,7 @@ import { usePushNotifications, registerPushToken } from './src/hooks/usePushNoti
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { OfflineBanner } from './src/components/OfflineBanner';
 import { LoginPromptProvider } from './src/contexts/LoginPrompt';
+import { DialogProvider } from './src/contexts/Dialog';
 import LoginRequiredModal from './src/components/LoginRequiredModal';
 import { navigationRef } from './navigationRef';
 
@@ -85,6 +86,9 @@ function AppTabs({ navigation }) {
 
   return (
     <Tab.Navigator
+      // Kartan är startläget. Appens huvudhandling är att hitta och betygsätta
+      // en lekplats man står vid — vännernas flöde är sekundärt.
+      initialRouteName="Sök"
       screenOptions={{
         tabBarShowLabel: false,
         headerShown: false,
@@ -102,12 +106,28 @@ function AppTabs({ navigation }) {
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
-        sceneStyle: { 
+        sceneStyle: {
           backgroundColor: theme.colors.bg,
           paddingBottom: 120, // give room for floating tab bar + extra gap
         },
       }}
     >
+      {/* Sök – startskärmen */}
+      <Tab.Screen
+        name="Sök"
+        component={SearchScreen}
+        options={{
+          tabBarAccessibilityLabel: 'Sök lekplatser',
+          tabBarIcon: ({ focused }) => (
+            <Ionicons
+              name={focused ? 'map' : 'map-outline'}
+              size={30}
+              color={focused ? theme.colors.primary : theme.colors.textMuted}
+            />
+          ),
+        }}
+      />
+
       {/* Hem */}
       <Tab.Screen
         name="Hem"
@@ -117,22 +137,6 @@ function AppTabs({ navigation }) {
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name={focused ? 'home' : 'home-outline'}
-              size={30}
-              color={focused ? theme.colors.primary : theme.colors.textMuted}
-            />
-          ),
-        }}
-      />
-
-      {/* Sök */}
-      <Tab.Screen
-        name="Sök"
-        component={SearchScreen}
-        options={{
-          tabBarAccessibilityLabel: 'Sök lekplatser',
-          tabBarIcon: ({ focused }) => (
-            <Ionicons
-              name={focused ? 'search' : 'search-outline'}
               size={30}
               color={focused ? theme.colors.primary : theme.colors.textMuted}
             />
@@ -356,6 +360,7 @@ function App() {
   return (
     <ErrorBoundary>
     <ThemeProvider>
+      <DialogProvider>
       <LoginPromptProvider>
       <OfflineBanner />
       <ThemedNavigationContainer>
@@ -502,6 +507,7 @@ function App() {
       </ThemedNavigationContainer>
       <LoginRequiredModal />
       </LoginPromptProvider>
+      </DialogProvider>
     </ThemeProvider>
     </ErrorBoundary>
   );

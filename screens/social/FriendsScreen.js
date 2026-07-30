@@ -8,7 +8,6 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
@@ -34,6 +33,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 // 🟢 Tema & UI
 import { useTheme } from '../../src/theme';
 import { Card } from '../../src/ui';
+import { useDialog } from '../../src/contexts/Dialog';
 
 // ---- Fuzzy-matchning för sökning ----
 // Returnerar true om query matchar candidate, med tolerans för 1 stavfel.
@@ -144,6 +144,7 @@ const FriendsListHeader = React.memo(function FriendsListHeader({
 
 function FriendsScreen() {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const navigation = useNavigation();
 
@@ -185,7 +186,7 @@ function FriendsScreen() {
       setFriendsList(friendsData);
     } catch (error) {
       console.error('Fel vid hämtning av vänner:', error);
-      Alert.alert('Fel', 'Kunde inte hämta din vänlista.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte hämta din vänlista.' });
     } finally {
       setLoading(false);
     }
@@ -267,7 +268,7 @@ function FriendsScreen() {
       setSearchResults(results);
     } catch (error) {
       console.error('Sökfel:', error);
-      Alert.alert('Fel', 'Kunde inte utföra sökningen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte utföra sökningen.' });
     } finally {
       setIsSearching(false);
     }
@@ -284,10 +285,13 @@ function FriendsScreen() {
         timestamp: serverTimestamp(),
       });
       setSentRequestIds((prev) => new Set([...prev, targetUser.uid]));
-      Alert.alert('Förfrågan skickad!', `En vänförfrågan har skickats till ${targetUser.smeknamn}.`);
+      await dialog.alert({
+        title: 'Förfrågan skickad!',
+        message: `En vänförfrågan har skickats till ${targetUser.smeknamn}.`,
+      });
     } catch (error) {
       console.error('Fel vid skickande av vänförfrågan:', error);
-      Alert.alert('Fel', 'Kunde inte skicka vänförfrågan.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte skicka vänförfrågan.' });
     }
   }, [userId]);
 
@@ -305,10 +309,13 @@ function FriendsScreen() {
       setPendingRequests((prev) => prev.filter((r) => r.id !== request.id));
       setFriendsList((prev) => [...prev, request.fromUser]);
       setFriendIds((prev) => [...prev, request.fromUserId]);
-      Alert.alert('Vän tillagd!', `${request.fromUser.smeknamn} är nu din vän.`);
+      await dialog.alert({
+        title: 'Vän tillagd!',
+        message: `${request.fromUser.smeknamn} är nu din vän.`,
+      });
     } catch (error) {
       console.error('Fel vid accepterande av förfrågan:', error);
-      Alert.alert('Fel', 'Kunde inte acceptera förfrågan.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte acceptera förfrågan.' });
     }
   }, [userId]);
 
@@ -320,38 +327,33 @@ function FriendsScreen() {
       setPendingRequests((prev) => prev.filter((r) => r.id !== request.id));
     } catch (error) {
       console.error('Fel vid avvisande av förfrågan:', error);
-      Alert.alert('Fel', 'Kunde inte avvisa förfrågan.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte avvisa förfrågan.' });
     }
   }, [userId]);
 
   // Ta bort vän
   const handleRemoveFriend = useCallback(async (friendToRemove) => {
     if (!userId) return;
-    Alert.alert(
-      'Ta bort vän',
-      `Är du säker på att du vill ta bort ${friendToRemove.smeknamn} som vän?`,
-      [
-        { text: 'Avbryt', style: 'cancel' },
-        {
-          text: 'Ta bort',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await Promise.all([
-                updateDoc(doc(db, 'users', userId), { friends: arrayRemove(friendToRemove.uid) }),
-                updateDoc(doc(db, 'users', friendToRemove.uid), { friends: arrayRemove(userId) }),
-              ]);
-              setFriendsList((prev) => prev.filter((user) => user.uid !== friendToRemove.uid));
-              setFriendIds((prev) => prev.filter((id) => id !== friendToRemove.uid));
-            } catch (error) {
-              console.error('Fel vid borttagning av vän:', error);
-              Alert.alert('Fel', 'Kunde inte ta bort vän.');
-            }
-          },
-        },
-      ]
-    );
-  }, [userId]);
+    const bekraftat = await dialog.confirm({
+      title: 'Ta bort vän',
+      message: `Är du säker på att du vill ta bort ${friendToRemove.smeknamn} som vän?`,
+      confirmLabel: 'Ta bort',
+      destructive: true,
+    });
+    if (!bekraftat) return;
+
+    try {
+      await Promise.all([
+        updateDoc(doc(db, 'users', userId), { friends: arrayRemove(friendToRemove.uid) }),
+        updateDoc(doc(db, 'users', friendToRemove.uid), { friends: arrayRemove(userId) }),
+      ]);
+      setFriendsList((prev) => prev.filter((user) => user.uid !== friendToRemove.uid));
+      setFriendIds((prev) => prev.filter((id) => id !== friendToRemove.uid));
+    } catch (error) {
+      console.error('Fel vid borttagning av vän:', error);
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte ta bort vän.' });
+    }
+  }, [userId, dialog]);
 
   // Render: inkommande förfrågan
   const renderPendingRequest = useCallback((request) => {

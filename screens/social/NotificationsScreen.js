@@ -5,7 +5,6 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../firebase';
@@ -20,10 +19,12 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { useTheme } from '../../src/theme';
+import { useDialog } from '../../src/contexts/Dialog';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function NotificationsScreen({ navigation }) {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
   const uid = auth.currentUser?.uid;
@@ -65,28 +66,23 @@ export default function NotificationsScreen({ navigation }) {
 
   const clearAll = async () => {
     if (!uid) return;
-    Alert.alert(
-      'Rensa notiser',
-      'Är du säker på att du vill ta bort alla notiser?',
-      [
-        { text: 'Avbryt', style: 'cancel' },
-        {
-          text: 'Rensa',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const snap = await getDocs(collection(db, 'users', uid, 'notifications'));
-              const batch = writeBatch(db);
-              snap.forEach(docSnap => batch.delete(docSnap.ref));
-              await batch.commit();
-              setNotifs([]);
-            } catch (e) {
-              console.warn('Kunde inte rensa notiser', e);
-            }
-          },
-        },
-      ]
-    );
+    const bekraftat = await dialog.confirm({
+      title: 'Rensa notiser',
+      message: 'Är du säker på att du vill ta bort alla notiser?',
+      confirmLabel: 'Rensa',
+      destructive: true,
+    });
+    if (!bekraftat) return;
+
+    try {
+      const snap = await getDocs(collection(db, 'users', uid, 'notifications'));
+      const batch = writeBatch(db);
+      snap.forEach(docSnap => batch.delete(docSnap.ref));
+      await batch.commit();
+      setNotifs([]);
+    } catch (e) {
+      console.warn('Kunde inte rensa notiser', e);
+    }
   };
 
   const renderItem = ({ item }) => {

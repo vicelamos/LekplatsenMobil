@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert } from 'react-native';
 import { compressImage } from '../../utils/imageCompression';
+import { useDialog } from '../contexts/Dialog';
 
 /**
  * Hook som kapslar in bildval (galleri/kamera) + komprimering + EXIF-strippning.
@@ -12,6 +12,7 @@ import { compressImage } from '../../utils/imageCompression';
  */
 export function useImagePicker(options = {}) {
   const [loading, setLoading] = useState(false);
+  const dialog = useDialog();
   const quality = options.quality || 0.75;
   const allowsEditing = options.allowsEditing ?? true;
   const aspect = options.aspect || undefined;
@@ -19,7 +20,10 @@ export function useImagePicker(options = {}) {
   const pickFromGallery = async (onPick) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Åtkomst nekad', 'Du måste ge appen tillåtelse att komma åt dina foton.');
+      await dialog.alert({
+        title: 'Åtkomst nekad',
+        message: 'Du måste ge appen tillåtelse att komma åt dina foton.',
+      });
       return;
     }
     setLoading(true);
@@ -42,7 +46,10 @@ export function useImagePicker(options = {}) {
   const pickFromCamera = async (onPick) => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Åtkomst nekad', 'Du måste ge appen tillåtelse att använda kameran.');
+      await dialog.alert({
+        title: 'Åtkomst nekad',
+        message: 'Du måste ge appen tillåtelse att använda kameran.',
+      });
       return;
     }
     setLoading(true);

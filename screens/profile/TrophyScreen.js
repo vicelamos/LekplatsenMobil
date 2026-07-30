@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 // 🟢 Tema & UI
 import { useTheme } from '../../src/theme';
+import { useDialog } from '../../src/contexts/Dialog';
 import { Card } from '../../src/ui';
 
 // Hjälpfunktion för live-stat
@@ -135,6 +136,7 @@ const TrophyCard = React.memo(({ trophy, unlockedData, userProfile }) => {
 
 function TrophyScreen() {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   const [loading, setLoading] = useState(true);
@@ -169,7 +171,7 @@ function TrophyScreen() {
       setUnlockedMap(unlockedData);
     } catch (error) {
       console.error('Fel vid hämtning av troféer:', error);
-      Alert.alert('Fel', 'Kunde inte ladda troféer.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte ladda troféer.' });
     } finally {
       setLoading(false);
     }

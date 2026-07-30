@@ -1,23 +1,40 @@
 import {
-  collection, doc, addDoc, updateDoc, getDoc, getDocs,
+  collection, doc, addDoc, updateDoc, getDocs,
   query, where, orderBy, limit, serverTimestamp, arrayUnion, arrayRemove,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { buildCheckinDoc } from '../../utils/checkinDocument';
 
 /**
- * Skapar en ny incheckning.
+ * Skapar en incheckning.
+ *
+ * OBS: tidsstämpeln heter `timestamp`. Den här filen skrev tidigare `skapad`,
+ * vilket gjorde att incheckningar skapade härifrån aldrig syntes i flödet —
+ * det sorterar och paginerar på `timestamp`.
  */
-export async function createCheckin(data) {
+export async function createCheckin(args) {
+  const dokument = buildCheckinDoc(args);
   return addDoc(collection(db, 'incheckningar'), {
-    ...data,
-    skapad: serverTimestamp(),
-    likes: [],
+    ...dokument,
+    timestamp: serverTimestamp(),
   });
 }
 
 /**
- * Uppdaterar en incheckning (ägaren).
+ * Snabbincheckning: bara betyg och lekplats.
+ *
+ * Detta är appens vanligaste handling — allt annat (bild, kommentar,
+ * aktiviteter, taggade vänner) läggs till efteråt via updateCheckin.
  */
+export async function createQuickCheckin({
+  playgroundId, playgroundName, rating, userId, userSmeknamn, isGuest = false,
+}) {
+  return createCheckin({
+    playgroundId, playgroundName, rating, userId, userSmeknamn, isGuest,
+  });
+}
+
+/** Uppdaterar en incheckning (bara ägaren, se firestore.rules). */
 export async function updateCheckin(checkinId, data) {
   return updateDoc(doc(db, 'incheckningar', checkinId), {
     ...data,
@@ -27,44 +44,34 @@ export async function updateCheckin(checkinId, data) {
 }
 
 /**
- * Togglar like på en incheckning.
+ * Togglar like. Använder arrayUnion/arrayRemove i stället för att läsa
+ * dokumentet först — en läsning mindre, och ingen kapplöpning mellan
+ * läsning och skrivning.
  */
-export async function toggleLike(checkinId, userId) {
-  const ref = doc(db, 'incheckningar', checkinId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
-  const likes = snap.data().likes || [];
-  if (likes.includes(userId)) {
-    await updateDoc(ref, { likes: arrayRemove(userId) });
-  } else {
-    await updateDoc(ref, { likes: arrayUnion(userId) });
-  }
+export async function toggleLike(checkinId, userId, isLiked) {
+  return updateDoc(doc(db, 'incheckningar', checkinId), {
+    likes: isLiked ? arrayRemove(userId) : arrayUnion(userId),
+  });
 }
 
-/**
- * Hämtar incheckningar för en specifik lekplats.
- */
+/** Incheckningar för en lekplats, nyast först. */
 export async function getCheckinsByPlayground(playgroundId, limitCount = 20) {
-  const q = query(
+  const snap = await getDocs(query(
     collection(db, 'incheckningar'),
     where('lekplatsId', '==', playgroundId),
-    orderBy('skapad', 'desc'),
+    orderBy('timestamp', 'desc'),
     limit(limitCount)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  ));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-/**
- * Hämtar incheckningar för en specifik användare.
- */
+/** Incheckningar för en användare, nyast först. */
 export async function getCheckinsByUser(userId, limitCount = 50) {
-  const q = query(
+  const snap = await getDocs(query(
     collection(db, 'incheckningar'),
     where('userId', '==', userId),
-    orderBy('skapad', 'desc'),
+    orderBy('timestamp', 'desc'),
     limit(limitCount)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  ));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }

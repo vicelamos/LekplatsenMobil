@@ -5,7 +5,6 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   StyleSheet,
   SectionList,
@@ -28,10 +27,12 @@ import {
 import { db } from '../../firebase';
 import { useTheme } from '../../src/theme';
 import { invalidatePlaygroundCache } from '../../src/services/playgroundService';
+import { useDialog } from '../../src/contexts/Dialog';
 import { Card } from '../../src/ui';
 
 function ReviewDraftsScreen({ navigation }) {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const [drafts, setDrafts] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,74 +60,70 @@ function ReviewDraftsScreen({ navigation }) {
     }, [])
   );
 
-  const approve = (item) => {
-    Alert.alert('Godkänn lekplats', `Vill du publicera "${item.namn}"?`, [
-      { text: 'Avbryt', style: 'cancel' },
-      {
-        text: 'Godkänn',
-        onPress: async () => {
-          try {
-            await updateDoc(doc(db, 'lekplatser', item.id), { status: 'publicerad' });
-            invalidatePlaygroundCache();
-            setDrafts((prev) => prev.filter((d) => d.id !== item.id));
-          } catch (e) {
-            Alert.alert('Fel', 'Kunde inte godkänna lekplatsen.');
-            return;
-          }
-          if (item.createdBy) {
-            try {
-              await addDoc(collection(db, 'users', item.createdBy, 'notifications'), {
-                type: 'PLAYGROUND_APPROVED',
-                title: 'Lekplats godkänd!',
-                message: `Din lekplats "${item.namn}" har godkänts och är nu publicerad.`,
-                read: false,
-                createdAt: serverTimestamp(),
-                link: `/lekplats/${item.id}`,
-              });
-            } catch {
-              // Notisen är inte kritisk
-            }
-          }
-        },
-      },
-    ]);
+  const approve = async (item) => {
+    const bekraftat = await dialog.confirm({
+      title: 'Godkänn lekplats',
+      message: `Vill du publicera "${item.namn}"?`,
+      confirmLabel: 'Godkänn',
+    });
+    if (!bekraftat) return;
+
+    try {
+      await updateDoc(doc(db, 'lekplatser', item.id), { status: 'publicerad' });
+      invalidatePlaygroundCache();
+      setDrafts((prev) => prev.filter((d) => d.id !== item.id));
+    } catch (e) {
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte godkänna lekplatsen.' });
+      return;
+    }
+
+    if (item.createdBy) {
+      try {
+        await addDoc(collection(db, 'users', item.createdBy, 'notifications'), {
+          type: 'PLAYGROUND_APPROVED',
+          title: 'Lekplats godkänd!',
+          message: `Din lekplats "${item.namn}" har godkänts och är nu publicerad.`,
+          read: false,
+          createdAt: serverTimestamp(),
+          link: `/lekplats/${item.id}`,
+        });
+      } catch {
+        // Notisen är inte kritisk
+      }
+    }
   };
 
-  const reject = (item) => {
-    Alert.alert(
-      'Neka lekplats',
-      `Vill du ta bort "${item.namn}"? Detta går inte att ångra.`,
-      [
-        { text: 'Avbryt', style: 'cancel' },
-        {
-          text: 'Ta bort',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(db, 'lekplatser', item.id));
-              invalidatePlaygroundCache();
-              setDrafts((prev) => prev.filter((d) => d.id !== item.id));
-            } catch (e) {
-              Alert.alert('Fel', 'Kunde inte ta bort lekplatsen.');
-              return;
-            }
-            if (item.createdBy) {
-              try {
-                await addDoc(collection(db, 'users', item.createdBy, 'notifications'), {
-                  type: 'PLAYGROUND_REJECTED',
-                  title: 'Lekplats nekad',
-                  message: `Din lekplats "${item.namn}" godkändes tyvärr inte.`,
-                  read: false,
-                  createdAt: serverTimestamp(),
-                });
-              } catch {
-                // Notisen är inte kritisk
-              }
-            }
-          },
-        },
-      ]
-    );
+  const reject = async (item) => {
+    const bekraftat = await dialog.confirm({
+      title: 'Neka lekplats',
+      message: `Vill du ta bort "${item.namn}"? Detta går inte att ångra.`,
+      confirmLabel: 'Ta bort',
+      destructive: true,
+    });
+    if (!bekraftat) return;
+
+    try {
+      await deleteDoc(doc(db, 'lekplatser', item.id));
+      invalidatePlaygroundCache();
+      setDrafts((prev) => prev.filter((d) => d.id !== item.id));
+    } catch (e) {
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte ta bort lekplatsen.' });
+      return;
+    }
+
+    if (item.createdBy) {
+      try {
+        await addDoc(collection(db, 'users', item.createdBy, 'notifications'), {
+          type: 'PLAYGROUND_REJECTED',
+          title: 'Lekplats nekad',
+          message: `Din lekplats "${item.namn}" godkändes tyvärr inte.`,
+          read: false,
+          createdAt: serverTimestamp(),
+        });
+      } catch {
+        // Notisen är inte kritisk
+      }
+    }
   };
 
   const markSuggestion = async (item, newStatus) => {
@@ -134,7 +131,7 @@ function ReviewDraftsScreen({ navigation }) {
       await updateDoc(doc(db, 'andringsforslag', item.id), { status: newStatus });
       setSuggestions((prev) => prev.filter((s) => s.id !== item.id));
     } catch (e) {
-      Alert.alert('Fel', 'Kunde inte uppdatera förslaget.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte uppdatera förslaget.' });
       return;
     }
     if (item.userId) {

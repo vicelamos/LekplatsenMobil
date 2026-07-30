@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Image,
   Dimensions,
   ScrollView,
@@ -16,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Tema & UI-komponenter
 import { useTheme } from '../../src/theme';
+import { useDialog } from '../../src/contexts/Dialog';
 import { Card, Button, Input, PatternBackground } from '../../src/ui';
 
 // Firebase
@@ -27,6 +27,7 @@ const hero = require('../../assets/images/lekplatsen.png');
 
 export default function SignupScreen({ navigation }) {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const screenWidth = Dimensions.get('window').width;
 
   // Form states
@@ -138,7 +139,7 @@ export default function SignupScreen({ navigation }) {
     } catch (error) {
       let msg = 'Kunde inte skapa konto.';
       if (error.code === 'auth/email-already-in-use') msg = 'E-posten används redan.';
-      Alert.alert('Fel', msg);
+      await dialog.alert({ title: 'Fel', message: msg });
     } finally {
       setLoading(false);
     }

@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Tema & UI-komponenter
 import { useTheme } from '../../src/theme';
+import { useDialog } from '../../src/contexts/Dialog';
 import { Card, Button, Input, PatternBackground } from '../../src/ui';
 
 // Firebase
@@ -21,23 +21,27 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 
 export default function ForgotPasswordScreen({ navigation }) {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleReset = async () => {
     if (!email.trim()) {
-      Alert.alert('E-post saknas', 'Skriv in din e-postadress för att få en återställningslänk.');
+      await dialog.alert({
+        title: 'E-post saknas',
+        message: 'Skriv in din e-postadress för att få en återställningslänk.',
+      });
       return;
     }
 
     setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email.trim());
-      Alert.alert(
-        'E-post skickad! 📧',
-        'Kolla din inkorg (och skräppost) efter instruktioner för att välja ett nytt lösenord.',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
+      await dialog.alert({
+        title: 'E-post skickad! 📧',
+        message: 'Kolla din inkorg (och skräppost) efter instruktioner för att välja ett nytt lösenord.',
+      });
+      navigation.goBack();
     } catch (error) {
       let message = 'Ett fel inträffade.';
       if (error.code === 'auth/user-not-found') {
@@ -45,7 +49,7 @@ export default function ForgotPasswordScreen({ navigation }) {
       } else if (error.code === 'auth/invalid-email') {
         message = 'E-postadressen är felaktigt formaterad.';
       }
-      Alert.alert('Kunde inte skicka', message);
+      await dialog.alert({ title: 'Kunde inte skicka', message });
     } finally {
       setLoading(false);
     }

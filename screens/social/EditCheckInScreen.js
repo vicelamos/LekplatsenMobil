@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -21,6 +20,7 @@ import { File as ExpoFile } from 'expo-file-system';
 import { auth, db, storage } from '../../firebase';
 import { compressImage, getReadableFileSize } from '../../utils/imageCompression';
 import { checkinImagePath } from '../../utils/anonymization';
+import { useDialog } from '../../src/contexts/Dialog';
 import { uploadBase64 } from '../../src/services/storageService';
 import {
   doc,
@@ -38,6 +38,7 @@ import { Card } from '../../src/ui';
 
 export default function EditCheckInScreen({ route, navigation }) {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   const { checkInId, checkIn } = route.params;
@@ -205,7 +206,7 @@ export default function EditCheckInScreen({ route, navigation }) {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Behörighet krävs', 'Appen behöver åtkomst till dina bilder.');
+      await dialog.alert({ title: 'Behörighet krävs', message: 'Appen behöver åtkomst till dina bilder.' });
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -227,7 +228,7 @@ export default function EditCheckInScreen({ route, navigation }) {
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Behörighet krävs', 'Appen behöver åtkomst till kameran.');
+      await dialog.alert({ title: 'Behörighet krävs', message: 'Appen behöver åtkomst till kameran.' });
       return;
     }
     const res = await ImagePicker.launchCameraAsync({
@@ -245,13 +246,18 @@ export default function EditCheckInScreen({ route, navigation }) {
     }
   };
 
-  const showImageOptions = () => {
-    Alert.alert('Byt bild', '', [
-      { text: 'Välj från galleri', onPress: pickImage },
-      { text: 'Ta foto', onPress: takePhoto },
-      { text: 'Ta bort bild', style: 'destructive', onPress: () => { setImageUri(null); setExistingBildUrl(''); } },
-      { text: 'Avbryt', style: 'cancel' },
-    ]);
+  const showImageOptions = async () => {
+    const val = await dialog.choose({
+      title: 'Byt bild',
+      options: [
+        { label: 'Välj från galleri', value: 'galleri' },
+        { label: 'Ta foto', value: 'kamera' },
+        { label: 'Ta bort bild', value: 'ta-bort', style: 'destructive' },
+      ],
+    });
+    if (val === 'galleri') pickImage();
+    if (val === 'kamera') takePhoto();
+    if (val === 'ta-bort') { setImageUri(null); setExistingBildUrl(''); }
   };
 
   const uploadImageIfNew = async () => {
@@ -266,7 +272,7 @@ export default function EditCheckInScreen({ route, navigation }) {
       return await getDownloadURL(storageRef);
     } catch (e) {
       console.error('EditCheckInScreen: Uppladdning misslyckades:', e);
-      Alert.alert('Fel', 'Kunde inte ladda upp bilden.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte ladda upp bilden.' });
       return existingBildUrl;
     } finally {
       setUploading(false);
@@ -281,7 +287,7 @@ export default function EditCheckInScreen({ route, navigation }) {
   const save = async () => {
     try {
       if (rating <= 0) {
-        Alert.alert('Betyg saknas', 'Välj ett betyg (1–5).');
+        await dialog.alert({ title: 'Betyg saknas', message: 'Välj ett betyg (1–5).' });
         return;
       }
       setSubmitting(true);
@@ -315,12 +321,11 @@ export default function EditCheckInScreen({ route, navigation }) {
         }
       }
 
-      Alert.alert('Sparat!', 'Din incheckning är uppdaterad.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      await dialog.alert({ title: 'Sparat!', message: 'Din incheckning är uppdaterad.' });
+      navigation.goBack();
     } catch (e) {
       console.error('Kunde inte uppdatera incheckning:', e);
-      Alert.alert('Fel', 'Kunde inte spara ändringarna. Försök igen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte spara ändringarna. Försök igen.' });
     } finally {
       setSubmitting(false);
     }

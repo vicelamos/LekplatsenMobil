@@ -17,31 +17,17 @@
     "test:watch": "jest --watch",
     "test:rules": "firebase emulators:exec --only firestore --project demo-lekplatsen \"jest -c jest.rules.config.js\"",
     "test:perf": "firebase emulators:exec --config firebase.perf.json --only firestore --project demo-lekplatsen-perf \"jest -c jest.perf.config.js\"",
-    "test:all": "npm test && npm run test:rules && npm run test:perf"
+    "test:components": "jest -c jest.components.config.js",
+    "test:all": "npm test && npm run test:components && npm run test:rules && npm run test:perf"
   },
   "jest": {
-    "projects": [
-      {
-        "displayName": "utils",
-        "testMatch": [
-          "**/__tests__/utils/**/*.test.js"
-        ],
-        "transform": {
-          "^.+\\.jsx?$": "babel-jest"
-        }
-      },
-      {
-        "displayName": "components",
-        "preset": "jest-expo",
-        "testMatch": [
-          "**/__tests__/ui/**/*.test.js",
-          "**/__tests__/components/**/*.test.js"
-        ],
-        "transformIgnorePatterns": [
-          "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|@unimodules/.*|unimodules-.*|sentry-expo|native-base|react-native-svg)"
-        ]
-      }
-    ]
+    "displayName": "utils",
+    "testMatch": [
+      "**/__tests__/utils/**/*.test.js"
+    ],
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    }
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.0",

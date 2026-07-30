@@ -9,7 +9,6 @@ import {
   Share,
   Platform,
   Linking,
-  Alert,
   StyleSheet,
   ActivityIndicator,
   FlatList,
@@ -26,6 +25,7 @@ import { auth, db } from '../../firebase';
 import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, updateDoc, arrayUnion, arrayRemove, addDoc, serverTimestamp } from 'firebase/firestore';
 import { parsePosition, calculateDistance, formatDistance } from '../../utils/geo';
 import { trackSponsorEvent } from '../../utils/sponsorAnalytics';
+import { useDialog } from '../../src/contexts/Dialog';
 
 // 🟢 Importera de nya gemensamma delarna
 import { CheckInCard } from '../../src/components/CheckInCard';
@@ -184,6 +184,7 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
 export default function PlaygroundDetailsScreen({ route, navigation }) {
   const { theme } = useTheme();
   const requireAuth = useAuthGate();
+  const dialog = useDialog();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   const { playground: initialPg, id: playgroundId } = route.params || {};
@@ -257,7 +258,7 @@ export default function PlaygroundDetailsScreen({ route, navigation }) {
       });
     } catch (e) {
       setIsFavorite(!newStatus); // Revertera om det misslyckas
-      Alert.alert('Fel', 'Kunde inte uppdatera favoriter.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte uppdatera favoriter.' });
     }
   };
 
@@ -304,7 +305,7 @@ export default function PlaygroundDetailsScreen({ route, navigation }) {
       try {
         const snap = await getDoc(doc(db, 'lekplatser', playgroundId));
         if (!snap.exists()) {
-          Alert.alert('Hittades inte', 'Lekplatsen finns inte längre.');
+          await dialog.alert({ title: 'Hittades inte', message: 'Lekplatsen finns inte längre.' });
           navigation.goBack?.();
           return;
         }
@@ -429,7 +430,7 @@ useEffect(() => {
         message: `${name}${address ? `, ${address}` : ''}`,
       });
     } catch {
-      Alert.alert('Fel', 'Kunde inte dela.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte dela.' });
     }
   };
 
@@ -444,11 +445,11 @@ useEffect(() => {
 
   const submitSuggestion = async () => {
     if (!suggestionCategory) {
-      Alert.alert('Välj kategori', 'Välj vad ditt förslag handlar om.');
+      await dialog.alert({ title: 'Välj kategori', message: 'Välj vad ditt förslag handlar om.' });
       return;
     }
     if (!suggestionText.trim()) {
-      Alert.alert('Tomt förslag', 'Beskriv vad du vill ändra.');
+      await dialog.alert({ title: 'Tomt förslag', message: 'Beskriv vad du vill ändra.' });
       return;
     }
     try {
@@ -465,10 +466,10 @@ useEffect(() => {
       setSuggestionText('');
       setSuggestionCategory(null);
       setShowSuggestModal(false);
-      Alert.alert('Tack!', 'Ditt förslag har skickats till en administratör.');
+      await dialog.alert({ title: 'Tack!', message: 'Ditt förslag har skickats till en administratör.' });
     } catch (e) {
       console.error('Kunde inte skicka förslag:', e);
-      Alert.alert('Fel', 'Kunde inte skicka förslaget. Försök igen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte skicka förslaget. Försök igen.' });
     } finally {
       setSendingSuggestion(false);
     }

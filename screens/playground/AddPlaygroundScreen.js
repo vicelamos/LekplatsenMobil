@@ -8,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -23,6 +22,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { compressImage, getReadableFileSize } from '../../utils/imageCompression';
 import { uploadBase64 } from '../../src/services/storageService';
 import { invalidatePlaygroundCache } from '../../src/services/playgroundService';
+import { useDialog } from '../../src/contexts/Dialog';
 
 import { auth, db, storage } from '../../firebase';
 import {
@@ -82,6 +82,7 @@ const SelectableChip = ({ label, selected, onPress }) => {
 
 export default function AddPlaygroundScreen({ route, navigation }) {
   const { theme } = useTheme();
+  const dialog = useDialog();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   const playgroundId = route.params?.id || null; // finns = redigera, annars skapa
@@ -208,7 +209,7 @@ export default function AddPlaygroundScreen({ route, navigation }) {
               await centerOnUser();
             }
           } else {
-            Alert.alert('Hittas inte', 'Lekplatsen finns inte längre.');
+            await dialog.alert({ title: 'Hittas inte', message: 'Lekplatsen finns inte längre.' });
             navigation.goBack?.();
             return;
           }
@@ -258,7 +259,7 @@ export default function AddPlaygroundScreen({ route, navigation }) {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Behörighet krävs', 'Appen behöver åtkomst till dina bilder.');
+      await dialog.alert({ title: 'Behörighet krävs', message: 'Appen behöver åtkomst till dina bilder.' });
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -279,7 +280,7 @@ export default function AddPlaygroundScreen({ route, navigation }) {
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Behörighet krävs', 'Appen behöver åtkomst till kameran.');
+      await dialog.alert({ title: 'Behörighet krävs', message: 'Appen behöver åtkomst till kameran.' });
       return;
     }
     const res = await ImagePicker.launchCameraAsync({
@@ -316,7 +317,7 @@ export default function AddPlaygroundScreen({ route, navigation }) {
       return [...existingUrls, ...uploadedUrls];
     } catch (e) {
       console.error('AddPlaygroundScreen: Uppladdning misslyckades:', e);
-      Alert.alert('Fel', 'Kunde inte ladda upp bilden. Försök igen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte ladda upp bilden. Försök igen.' });
       return allImages.filter(img => !img.isNew).map(img => img.url).filter(Boolean);
     } finally {
       setUploading(false);
@@ -327,24 +328,30 @@ export default function AddPlaygroundScreen({ route, navigation }) {
     setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   };
 
-  const validate = () => {
+  const validate = async () => {
     if (!isAdmin && playgroundId) {
-      Alert.alert('Behörighet saknas', 'Endast administratörer får redigera lekplatser.');
+      await dialog.alert({
+        title: 'Behörighet saknas',
+        message: 'Endast administratörer får redigera lekplatser.',
+      });
       return false;
     }
     if (!namn.trim()) {
-      Alert.alert('Namn saknas', 'Ange ett namn.');
+      await dialog.alert({ title: 'Namn saknas', message: 'Ange ett namn.' });
       return false;
     }
     if (!marker) {
-      Alert.alert('Position saknas', 'Tryck i kartan för att sätta ut en pin.');
+      await dialog.alert({
+        title: 'Position saknas',
+        message: 'Tryck i kartan för att sätta ut en pin.',
+      });
       return false;
     }
     return true;
   };
 
   const save = async () => {
-    if (!validate()) return;
+    if (!(await validate())) return;
     try {
       setSaving(true);
       // Lekplatslistan cachas i servicelagret – tvinga omläsning efter ändring
@@ -377,7 +384,7 @@ export default function AddPlaygroundScreen({ route, navigation }) {
           bildUrl: finalUrls[0] || '',
         });
         setAllImages(finalUrls.map(url => ({ url, isNew: false })));
-        Alert.alert('Sparat', 'Lekplatsen har uppdaterats.');
+        await dialog.alert({ title: 'Sparat', message: 'Lekplatsen har uppdaterats.' });
         navigation.goBack?.();
       } else {
         const created = await addDoc(collection(db, 'lekplatser'), {
@@ -395,43 +402,42 @@ export default function AddPlaygroundScreen({ route, navigation }) {
           });
         }
         if (isAdmin) {
-          Alert.alert('Skapad', 'Lekplatsen är skapad och publicerad.');
+          await dialog.alert({ title: 'Skapad', message: 'Lekplatsen är skapad och publicerad.' });
           navigation.replace('PlaygroundDetails', { id: created.id });
         } else {
-          Alert.alert(
-            'Tack!',
-            'Lekplatsen har skickats in för granskning. En administratör kommer att granska den innan den publiceras.',
-            [{ text: 'OK', onPress: () => navigation.goBack?.() }]
-          );
+          await dialog.alert({
+            title: 'Tack!',
+            message: 'Lekplatsen har skickats in för granskning. En administratör kommer att granska den innan den publiceras.',
+          });
+          navigation.goBack?.();
         }
       }
     } catch (e) {
       console.error('Kunde inte spara lekplats:', e);
-      Alert.alert('Fel', 'Kunde inte spara. Försök igen.');
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte spara. Försök igen.' });
     } finally {
       setSaving(false);
     }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!playgroundId) return;
-    Alert.alert('Ta bort lekplats', 'Är du säker? Detta går inte att ångra.', [
-      { text: 'Avbryt', style: 'cancel' },
-      {
-        text: 'Ta bort',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteDoc(doc(db, 'lekplatser', playgroundId));
-            invalidatePlaygroundCache();
-            Alert.alert('Borttagen', 'Lekplatsen har raderats.');
-            navigation.popToTop?.();
-          } catch (e) {
-            Alert.alert('Fel', 'Kunde inte ta bort lekplatsen.');
-          }
-        },
-      },
-    ]);
+    const bekraftat = await dialog.confirm({
+      title: 'Ta bort lekplats',
+      message: 'Är du säker? Detta går inte att ångra.',
+      confirmLabel: 'Ta bort',
+      destructive: true,
+    });
+    if (!bekraftat) return;
+
+    try {
+      await deleteDoc(doc(db, 'lekplatser', playgroundId));
+      invalidatePlaygroundCache();
+      await dialog.alert({ title: 'Borttagen', message: 'Lekplatsen har raderats.' });
+      navigation.popToTop?.();
+    } catch (e) {
+      await dialog.alert({ title: 'Fel', message: 'Kunde inte ta bort lekplatsen.' });
+    }
   };
 
   if (loading) {
